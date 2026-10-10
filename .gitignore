@@ -1,0 +1,41 @@
+# dependencias y compilación
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+.vite/
+*.tsbuildinfo
+
+# secretos y entorno
+.env
+.env.*
+!.env.example
+*.pem
+*.keystore
+*.jks
+secrets/
+
+# Claude Code (personal por máquina)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Capacitor / Android / iOS (compilaciones)
+apps/game/android/app/build/
+apps/game/android/.gradle/
+apps/game/android/local.properties
+apps/game/ios/App/Pods/
+apps/game/ios/App/build/
+
+# respaldos y datos locales
+backups/
+*.archive
+*.dump
+.mongo-data/
+
+# sistema
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

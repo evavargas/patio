@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(ls *)",
+      "Bash(node --version)",
+      "Bash(pnpm --version)"
+    ],
+    "ask": [
+      "Bash(pnpm add *)",
+      "Bash(pnpm remove *)",
+      "Bash(pnpm dlx *)",
+      "Bash(npx *)",
+      "Bash(git commit*)",
+      "Bash(git checkout*)",
+      "Bash(git merge*)",
+      "Bash(git rebase*)",
+      "Bash(docker *)",
+      "Bash(gcloud *)",
+      "Bash(gh *)"
+    ],
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(rm -rf*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/*.keystore)",
+      "Read(./**/*.jks)",
+      "Read(./**/secrets/**)"
+    ]
+  }
+}
