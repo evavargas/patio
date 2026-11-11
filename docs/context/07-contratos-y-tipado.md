@@ -8,6 +8,7 @@
 - Tipos TypeScript GENERADOS desde los schemas (no editar a mano los archivos generados).
 - Validadores en tiempo de ejecución (Ajv propuesto) para los bordes: cuerpo de cada pedido HTTP en la API, respuesta en el cliente, formularios del panel.
 - Ejemplos válidos de cada mecánica. Esos ejemplos se validan en las pruebas del juego, del panel y de la API (prueba de contrato).
+- Registro de player (`schemas/player.schema.json`): `RegisterPlayerRequest` { `nickname` 1 a 64 en el schema (el máximo de 20 lo aplica el servidor con `NICKNAME_NOT_ALLOWED`), `termsVersion` `^[A-Za-z0-9._-]{1,32}$`, `groupCode?` }, y `RegisterPlayerResponse` { `playerId`, `token` (32 bytes en base64url, 43 caracteres), `recoveryCode` (8) }. Primitivos nuevos: `GroupCode` (6), `RecoveryCode` (8), `PlayerToken`, del mismo alfabeto de 31 símbolos. Sin nivel. Validadores `isRegisterPlayerRequest` / `isRegisterPlayerResponse`; ejemplos en `examples/requests` y `examples/responses`. Los objetos toleran campos nuevos.
 - Catálogo de códigos de error de dominio, como unión de literales (29 al 2026-11-11, en `schemas/error.schema.json`; solo se agregan).
 - `wordDrop.config`: `template` con huecos `{id}`, `blanks[{id, correct}]` y `words[]` (banco con distractores). `dragDrop` implementa `equalShare` y `targetCounts`; clasificación por categoría y orden faltan (aditivo). La respuesta correcta viaja en `config` y el juego no la consume ni la muestra.
 

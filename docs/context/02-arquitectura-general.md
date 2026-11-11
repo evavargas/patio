@@ -57,8 +57,11 @@ documentation/ (fuera del repo o enlazada) los .docx originales
 | `word-filter` | Lista de palabras prohibidas y validación de apodos. | ninguno |
 | `stats` | Cierre diario perezoso, consultas del panel, rankings. | results, groups, players |
 | `accounts` | Cuentas del panel: login, refresh rotativo, cambio de contraseña, guard del panel. | auth |
-| `platform` | Configuración, reloj, límites por IP, errores, logs, health. | ninguno |
+| `platform` | Configuración, reloj, errores, logs, health. | ninguno |
+| `rate-limit` | Límites por IP: contadores en `rateLimits` con incremento atómico y TTL. Transversal como `platform`: lo usan registro, recuperación y login. Sale de `platform` porque necesita MongoDB y `platform` no puede importar de `database` sin ciclo. | database, platform |
 | `database` | Conexión a MongoDB (una por instancia), cierre ordenado. Transversal como `platform`: cualquier módulo con repositorio lo importa; solo importa de `platform`. | ninguno |
+
+`auth` son funciones puras exportadas (sin módulo de Nest, sin controlador). El registro `POST /v1/players` vive en `membership` porque toca jugador y grupo: usa `players` (apodo, credenciales, alta) y `groups` (leer el código); `membership` no importa `auth` ni `word-filter` directamente.
 
 Dentro de cada módulo: controlador (HTTP + validación con el schema) -> servicio (reglas) -> repositorio (MongoDB). Funciones puras con pruebas propias: cálculo de nivel, normalización de apodos, resolución del set del día.
 

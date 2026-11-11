@@ -29,6 +29,13 @@ Reglas de modelado:
 - Fechas: `Date` BSON en UTC para instantes; la clave de día es string `YYYY-MM-DD` en la zona configurada.
 - Toda consulta de panel pasa por el servicio de alcance. Ningún repositorio devuelve datos de grupos ajenos a un moderador.
 
+Usos reales hasta ahora:
+
+- `POST /v1/players` escribe `players` (con `countsByDifficulty` y `countsByFamily` vacíos, `level: 0`, `termsVersion` y `termsAcceptedAt`; `groupId` es `null` sin grupo), `groupMemberships` (solo con grupo, sin `leftAt`) y `rateLimits`; lee `groups` y `settings`. `groups._id` es un string opaco (la creación de grupos llega con el panel; las pruebas insertan fixtures).
+- Los índices de `players`, `groups`, `groupMemberships` y `rateLimits` se crean al arrancar (`createIndexes`, idempotente) desde el `onModuleInit` de cada repositorio. Las demás colecciones los crean cuando se usen.
+- Cupo del grupo = `countDocuments` sobre `players.groupId` (no sobre `groupMemberships`), para que una fila huérfana no ocupe un lugar.
+- Un choque de índice único de `tokenHash` o `recoveryHash` al insertar (probabilidad ínfima) responde 500 y el pedido se deshace; el cliente reintenta con identidad nueva.
+
 Primer uso real: `GET /v1/banned-words` lee el documento `settings` con `_id: "bannedWords"` (`{ version, words[] }`), 1 lectura por pedido, sin índices propios. Sin documento = versión 0 y lista vacía (no se escribe nada al arrancar). Quién crea y edita ese documento (versión que sube con cada cambio) queda para el panel.
 
 ## Eliminaciones (solo administrator, definitivas, sin papelera)

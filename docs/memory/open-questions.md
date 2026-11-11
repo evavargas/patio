@@ -85,3 +85,17 @@ Apodos duplicados dentro de un grupo, límite de frecuencia de gestos, silenciar
 | TypeScript 6.0.3 solo para lint | `typescript-eslint` no soporta TS 7 (peer `<6.1.0`, verificado 2026-11-11). Cuando lo soporte, quitar `typescript@6.0.3` de la raíz y revisar si conviene pasar a `strictTypeChecked`. Hasta entonces, el lint puede diferir de `tsc` 7 en casos raros. |
 | ESLint 10 | Se usa la línea 9 por el peer de `eslint-plugin-jsx-a11y`. Revisar cuando ese plugin declare ESLint 10 (la 9.x figura como deprecada en npm). |
 
+
+## Registro de player (pendientes)
+
+| Tema | Detalle |
+| --- | --- |
+| Números y "patrones de nombre completo" en el apodo | Doc 09 dice que también se bloquean, pero no define qué es un patrón de nombre completo ni si cualquier dígito se bloquea. NO implementado. Definir antes de abrir a niños. |
+| Versión de términos | `termsVersion` se guarda sin validar contra una lista. Definir los valores válidos cuando se redacten los textos. |
+| Límites por IP desde `settings.limits` | Hoy salen de variables de entorno con los valores de doc 03 (sin medir). Falta leer `settings.limits` con caché de 1 minuto cuando exista el panel. Doc 03 no da el límite de login para este paso ni el de recuperación está implementado. |
+| Saltos de proxy de Cloud Run | Se propone `TRUST_PROXY_HOPS=1`. Verificar con un despliegue real (y si se agrega un balanceador) que `req.ip` sea la IP del cliente y no la del proxy. |
+| Comando de verificación de pertenencia | Repara filas de `groupMemberships` sin jugador (si falló el deshacer) y la inversa. Doc 04 lo lista como comando a crear. |
+| Cupo estricto del grupo | Con insertar y volver a contar no se supera `maxSize`, pero una carrera por el último lugar puede rechazar a todos los que compiten. Un contador atómico en `groups` lo evitaría, a costa de mantenerlo en mover y borrar. Decidir si hace falta. |
+| IP en `rateLimits` | La IP queda en texto en la clave durante la ventana. Evaluar guardar un hash. |
+| Caché de la lista de palabras | El registro hace 1 lectura de `settings` por pedido. Sin medir; cachear en memoria si pesa. |
+| Código de grupo en minúsculas | El contrato exige mayúsculas; el cliente debe normalizar antes de enviar. |
