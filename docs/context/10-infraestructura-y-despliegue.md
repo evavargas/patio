@@ -23,13 +23,13 @@ No hay dominio propio: panel, juego y API quedan en dominios compartidos (`pages
 
 ## Entornos
 
-- Local: `docker compose` con Mongo y el servicio.
+- Local: `docker-compose.yml` en la raíz con UN servicio `mongo` (imagen `mongo:8.0.34`, contenedor `patio-mongo`, proyecto `patio`, volumen `patio-mongo-data`, puerto `127.0.0.1:27017`). `pnpm db:up` / `pnpm db:down` (down conserva los datos). Sin autenticación: es seguro SOLO porque el puerto queda atado a 127.0.0.1; sin datos reales. La API corre en el host con `pnpm dev:api`; todavía no hay servicio de la API en el compose.
 - Producción.
 - Entorno de prueba: sería otro proyecto gratuito de Atlas y otro servicio de Cloud Run (a evaluar).
 
 ## Variables y secretos
 
-Back: `MONGODB_URI`, `JWT_SECRET`, `RECOVERY_HMAC_SECRET`, `CORS_ORIGINS`, zona horaria por defecto, cuenta y contraseña de aplicación de Gmail SMTP (nombres por definir; el límite diario de envíos de Gmail está a verificar). Front: `VITE_API_URL`, `VITE_DEFAULT_THEME`. Nunca en el repo; `.env*` está en `.gitignore` y denegado en los permisos de Claude Code. Secretos del respaldo en secretos del repo de GitHub.
+Back: `MONGODB_URI` y `MONGODB_DB` (obligatorias salvo con `NODE_ENV=development` o `test`, donde valen `mongodb://127.0.0.1:27017` y `patio_dev`; en producción o con `NODE_ENV` ausente la API no arranca sin ellas), `JWT_SECRET`, `RECOVERY_HMAC_SECRET`, `CORS_ORIGINS`, zona horaria por defecto, cuenta y contraseña de aplicación de Gmail SMTP (nombres por definir; el límite diario de envíos de Gmail está a verificar). Front: `VITE_API_URL`, `VITE_DEFAULT_THEME`. Nunca en el repo; `.env*` está en `.gitignore` y denegado en los permisos de Claude Code. Secretos del respaldo en secretos del repo de GitHub.
 
 ## CI (GitHub Actions)
 

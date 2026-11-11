@@ -1,6 +1,6 @@
 # Base de datos (MongoDB Atlas M0)
 
-Una base, una colección por entidad. Límites del plan gratuito: 0,5 GB, 500 conexiones, 100 operaciones por segundo, SIN copias automáticas, se pausa tras 30 días sin actividad. Pool de hasta 10 conexiones por instancia. Transacciones: NO verificadas, el diseño no depende de ellas.
+Una base, una colección por entidad. Límites del plan gratuito: 0,5 GB, 500 conexiones, 100 operaciones por segundo, SIN copias automáticas, se pausa tras 30 días sin actividad. Pool de hasta 10 conexiones por instancia. Desarrollo y pruebas usan MongoDB local en Docker (8.0.34), no Atlas. Transacciones: NO verificadas, el diseño no depende de ellas.
 
 ## Colecciones e índices
 
@@ -28,6 +28,8 @@ Reglas de modelado:
 - Puntaje, conteos y nivel son derivados de `results` y se recalculan con un comando de mantenimiento.
 - Fechas: `Date` BSON en UTC para instantes; la clave de día es string `YYYY-MM-DD` en la zona configurada.
 - Toda consulta de panel pasa por el servicio de alcance. Ningún repositorio devuelve datos de grupos ajenos a un moderador.
+
+Primer uso real: `GET /v1/banned-words` lee el documento `settings` con `_id: "bannedWords"` (`{ version, words[] }`), 1 lectura por pedido, sin índices propios. Sin documento = versión 0 y lista vacía (no se escribe nada al arrancar). Quién crea y edita ese documento (versión que sube con cada cambio) queda para el panel.
 
 ## Eliminaciones (solo administrator, definitivas, sin papelera)
 

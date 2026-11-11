@@ -5,7 +5,7 @@
 | Nivel | Qué cubre |
 | --- | --- |
 | Unitarias | Cálculo de nivel (incluidos saltos de varios niveles), normalización y comparación de apodos, resolución del set (precedencia y congelado), tolerancia de medianoche, generación y validación de códigos. |
-| Integración | Con MongoDB en memoria: índices únicos, idempotencia de resultados, bloqueo de sets, cierre diario perezoso y su desactualización, efecto de cada eliminación. |
+| Integración | Con el MongoDB local de Docker (`pnpm db:up`), una base `patio_test_<aleatorio>` nueva por archivo de pruebas y borrada al terminar (nunca la de desarrollo). Si Mongo no responde, esas pruebas fallan con un mensaje que lo dice y las unitarias siguen corriendo. Cubre: índices únicos, idempotencia de resultados, bloqueo de sets, cierre diario perezoso y su desactualización, efecto de cada eliminación. |
 | Permisos | La matriz de permisos por cada ruta: administrator, moderator dueño, moderator ajeno y player. Ningún moderador accede a datos de grupos ajenos y solo el administrador elimina. |
 | Contratos | Ejemplos de las tres mecánicas validan contra los JSON Schema compartidos. |
 | Carga | Herramienta de carga contra un despliegue de prueba, con 50 y 500 jugadores simultáneos. La herramienta concreta está sin elegir. |
@@ -23,7 +23,7 @@
 
 ## Herramientas propuestas (ajustables)
 
-Vitest (unidad y componentes), Testing Library, Playwright (extremo a extremo y axe), `mongodb-memory-server` (integración), eslint con `jsx-a11y`, prettier. Tipos con `tsc --noEmit` en CI.
+Vitest (unidad y componentes), Testing Library, Playwright (extremo a extremo y axe), MongoDB local en Docker (integración; se descartó `mongodb-memory-server` por descargar binarios y para probar contra la misma versión que Atlas), eslint con `jsx-a11y`, prettier. Tipos con `tsc --noEmit` en CI.
 
 ## Definición de terminado (aplica a TODO cambio)
 

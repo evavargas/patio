@@ -58,6 +58,7 @@ documentation/ (fuera del repo o enlazada) los .docx originales
 | `stats` | Cierre diario perezoso, consultas del panel, rankings. | results, groups, players |
 | `accounts` | Cuentas del panel: login, refresh rotativo, cambio de contraseña, guard del panel. | auth |
 | `platform` | Configuración, reloj, límites por IP, errores, logs, health. | ninguno |
+| `database` | Conexión a MongoDB (una por instancia), cierre ordenado. Transversal como `platform`: cualquier módulo con repositorio lo importa; solo importa de `platform`. | ninguno |
 
 Dentro de cada módulo: controlador (HTTP + validación con el schema) -> servicio (reglas) -> repositorio (MongoDB). Funciones puras con pruebas propias: cálculo de nivel, normalización de apodos, resolución del set del día.
 

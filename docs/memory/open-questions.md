@@ -6,13 +6,13 @@ Cada fila: qué falta, quién puede resolverlo, qué bloquea. Cuando se cierra, 
 
 | Tema | Detalle | Bloquea |
 | --- | --- | --- |
-| Dispositivos de prueba | Faltan marca, versión de Android y memoria de cada uno. Con eso se fija el criterio de aprobación de la prueba de rendimiento. | Prueba de rendimiento 3D |
-| Versiones exactas del stack | Elegir y fijar versiones compatibles de React, three, R3F, drei, Rapier, Vite, NestJS, Capacitor, Tailwind, shadcn/ui. Verificar compatibilidad en la documentación oficial, no de memoria. | Primer paquete de código |
+| Versiones exactas del resto del stack | Fijadas para el juego (ver `decisions.md`, 2026-11-11). Faltan NestJS, Tailwind, shadcn/ui, Capacitor y la librería i18n. Verificar compatibilidad en la documentación oficial, no de memoria. | Paquetes de panel y API |
 
 ## Verificar antes de abrir a niños
 
 | Tema | Detalle |
 | --- | --- |
+| Rendimiento en dispositivo real | Salteado el 2026-11-11. Dispositivo candidato: Xiaomi Redmi Note 9 Pro (Snapdragon 720G, 6 GB, Android 10). Medir con `?perf=1` en navegador y WebView antes de abrir a niños; el criterio sigue siendo propuesta. |
 | Respaldo | Dónde se guarda el archivo (artefactos de GitHub, Cloudflare R2 o Google Cloud Storage), límites gratuitos, y que GitHub desactiva flujos programados en repos inactivos. Probar `mongorestore`. |
 | CORS en Capacitor | Confirmar el origen real en un dispositivo contra `CORS_ORIGINS`. Nota de nombre: la arquitectura menciona `ALLOWED_ORIGINS` y `CORS_ORIGINS` en la misma sección. Vigente: `CORS_ORIGINS`. Corregir el documento. |
 | Modo del sistema en Capacitor | Que `prefers-color-scheme` refleje el modo del sistema dentro del WebView. Si no, leerlo del lado nativo. |
@@ -67,3 +67,21 @@ Apodos duplicados dentro de un grupo, límite de frecuencia de gestos, silenciar
 | Valores en dp (mobile) | Propuestos, a validar en dispositivo real. Dock de 112 o 96 dp sin decidir. |
 | Desenfoque del dock | Costo de rendimiento sin medir. |
 | Textos del prototipo | Voseo o tuteo y redacción final: los revisa la persona responsable. |
+
+## Palabras prohibidas (pendientes de definir)
+
+| Tema | Detalle |
+| --- | --- |
+| Límites de `words` | Largo máximo de cada palabra y cantidad máxima de palabras: el doc no los define. El schema solo exige `minLength: 1`. |
+| Forma de guardado | Si el panel guarda las palabras ya normalizadas (mayúsculas y tildes) o el servidor normaliza al comparar. |
+| Creación del documento | Quién crea `settings/bannedWords` (comando de carga inicial o primer PUT del panel). Hoy su ausencia equivale a versión 0. |
+| Caché en memoria | Doc 03 sugiere cachear la lista en la instancia; hoy cada pedido hace 1 lectura (aceptable, el navegador cachea 60 s). |
+| Atlas M0 y versión | Confirmar la versión de servidor de Atlas M0 (se asume 8.0) y que `mongo:8.0.34` es compatible. |
+
+## Lint
+
+| Tema | Detalle |
+| --- | --- |
+| TypeScript 6.0.3 solo para lint | `typescript-eslint` no soporta TS 7 (peer `<6.1.0`, verificado 2026-11-11). Cuando lo soporte, quitar `typescript@6.0.3` de la raíz y revisar si conviene pasar a `strictTypeChecked`. Hasta entonces, el lint puede diferir de `tsc` 7 en casos raros. |
+| ESLint 10 | Se usa la línea 9 por el peer de `eslint-plugin-jsx-a11y`. Revisar cuando ese plugin declare ESLint 10 (la 9.x figura como deprecada en npm). |
+

@@ -2,6 +2,15 @@
 
 Formato: fecha, decisión, motivo breve, dónde aplica. Lo más reciente va arriba. Estado "doc pendiente" = decidido pero el documento original de arquitectura o diseño todavía no lo refleja.
 
+## 2026-11-11
+
+- La validación de la prueba de rendimiento 3D en dispositivo real (Redmi Note 9 Pro) se saltea por ahora y el desarrollo sigue con el stack web. El plan B (Unity) queda sin evaluar con datos. Motivo: la persona responsable prefiere avanzar. Aplica: `05-juego-frontend.md`. Riesgo asumido: si el rendimiento resulta insuficiente, se descubre más tarde y cuesta más cambiar.
+- Versiones fijadas para la prueba (exactas): react y react-dom 19.3.1, three 0.187.0, @react-three/fiber 9.8.2, @react-three/rapier 2.2.0, @dnd-kit/core 6.3.1, zustand 5.1.0, vite 8.3.8, @vitejs/plugin-react 6.3.0, typescript 7.0.2. `@react-three/drei` se quitó por no usarse. Capacitor 8.6.0 verificado en npm pero aún no agregado.
+
+- Contratos, primera parte (`packages/contracts`) confirmada: `config` de `wordDrop` = `template` con huecos `{id}`, `blanks[{id, correct}]` y `words[]`; `dragDrop` con `equalShare` y `targetCounts` (clasificación y orden se agregan después, aditivo); límites de texto 300 (enunciado), 200 (expresión y plantilla), 40 (palabra); `difficulty` mínimo 1 sin máximo; `PlayerId` de 12 caracteres del alfabeto de 31 símbolos; demás IDs como strings opacos de 1 a 64; objetos permisivos (sin `additionalProperties: false`) para tolerar cambios aditivos. Aplica: `07-contratos-y-tipado.md`.
+- La respuesta correcta viaja en `config` hasta el juego y no se consume ni se muestra. Un solo modelo de datos, sin versión "sin solución" para el cliente. Motivo: el cliente evalúa el logro (ver `02`, principio 3).
+- Catálogo de códigos de error ampliado de 6 a 28 (solo agregados): cuentas, desafíos y sets, jugadores, autenticación, límites, validación, logro fuera de fecha, versión de schema no soportada y error interno. Aplica: `packages/contracts/schemas/error.schema.json`.
+
 ## Prototipo visual (Stitch)
 
 Detalle en `docs/design/prototipo-pantallas.md`. Sin fecha a pedido de la persona responsable.
@@ -45,6 +54,33 @@ Detalle en `docs/design/prototipo-pantallas.md`. Sin fecha a pedido de la person
 - Lista de palabras prohibidas: la agrega y quita el administrador desde el panel en cualquier momento. Arranca vacía.
 - Respaldo: automático con GitHub Actions. Dónde guardarlo sigue abierto.
 - CORS y Capacitor: lista exacta `CORS_ORIGINS`, `server.androidScheme: "https"` explícito, sin HTTP nativo de Capacitor. Confirmar en dispositivo real.
+
+## 2026-11-11 (esqueleto de apps/api)
+
+- Dependencias de `apps/api`, versiones exactas, todas sin telemetría: `@nestjs/common|core|platform-express|testing` 12.4.2 (MIT), `reflect-metadata` 0.2.2 y `rxjs` 7.8.2 (Apache-2.0), `@types/express` 5.0.6 (MIT, solo tipos). Sin helmet ni supertest: cabeceras a mano y pruebas con `fetch`.
+- TypeScript 7.0.2 emite metadatos de decoradores con `experimentalDecorators` y `emitDecoratorMetadata`, así que NestJS compila con `tsc`. Los proveedores usan `@Inject(...)` explícito para no depender de eso en vitest.
+- `@patio/contracts` se consume sin build: `tsc` lo trata como biblioteca externa (no lo emite) y Node 24 lo carga quitando tipos porque el symlink resuelve a `packages/contracts/src`, fuera de `node_modules`. Límite: en la imagen de despliegue el paquete no puede quedar bajo `node_modules` (Node se niega a quitar tipos ahí). Resolver en el paso de despliegue (propuesta: build de contracts a `dist`).
+- Código de error nuevo `ROUTE_NOT_FOUND` (404 de ruta inexistente), aditivo. Otros 4xx sin código propio responden `VALIDATION_FAILED`.
+- Contrato nuevo `HealthResponse` (`{ status: "ok" }`) para `GET /v1/healthz`. Tolera campos nuevos.
+
+## 2026-11-11 (MongoDB local con Docker)
+
+- Decisión: Mongo local con Docker para desarrollo y pruebas, Atlas M0 para despliegue. Reemplaza `mongodb-memory-server` de la propuesta de doc 12.
+- Versiones exactas: imagen oficial `mongo:8.0.34` (SSPL, es el servidor y corre en Docker, no se enlaza al código; sin free monitoring: 8.0 ya no lo trae). Driver `mongodb` 7.8.0 (Apache-2.0, sin telemetría; transitivas: `bson` y `mongodb-connection-string-url` Apache-2.0, `@mongodb-js/saslprep`, `whatwg-url`, `tr46`, `punycode` MIT, `webidl-conversions` BSD-2-Clause). Compose v5.3.1, Docker 29.6.2.
+- La línea 8.0 es la que SUPONGO que ofrece Atlas M0 (sin verificar contra la consola de Atlas). El driver 7.x admite servidores 4.2+ (según su documentación). Confirmar antes de desplegar.
+- Compose: proyecto `patio`, contenedor `patio-mongo`, volumen con nombre `patio-mongo-data`, puerto `127.0.0.1:27017` (estaba libre). Sin autenticación porque solo escucha en loopback y no hay datos reales; con credenciales fijas no ganaríamos nada y habría que guardarlas en el repo. `pnpm db:down` no borra el volumen.
+- Módulo `database` (conexión, cierre ordenado, ping al arrancar) es transversal como `platform` y se agrega al mapa. Supuesto mío: doc 02 no lo listaba. En `eslint.config.js` entra en `API_MODULE_DEPS` y en la lista de transversales.
+- `MONGODB_URI` y `MONGODB_DB` se validan al arrancar. El valor por defecto local rige solo con `NODE_ENV=development|test`; en producción o con `NODE_ENV` ausente se exigen (falla cerrado). Mensajes de error nombran la variable, no el valor.
+- `GET /v1/banned-words` guarda la lista en `settings` (`_id: "bannedWords"`, doc 04), no en una colección `bannedWords` aparte. Contrato `BannedWordsResponse { version >= 0, words[] }`; ETag `"banned-words-v<version>"` y `Cache-Control: public, max-age=60`. Sin documento = versión 0.
+- Pruebas de integración: base `patio_test_<aleatorio>` por archivo, borrada al terminar; si Mongo no responde fallan con instrucción de correr `pnpm db:up`.
+
+## 2026-11-11 (ESLint)
+
+- ESLint 9.39.5 con flat config (`eslint.config.js` en la raíz). Se eligió la línea 9 y no la 10.14.0 porque `eslint-plugin-jsx-a11y` 6.10.2 declara peer solo hasta ESLint 9. Versiones exactas, todas MIT, sin telemetría declarada (revisado en metadatos de npm, no el código): `eslint` y `@eslint/js` 9.39.5, `typescript-eslint` 8.72.2, `globals` 17.14.0, `eslint-plugin-react-hooks` 7.1.1, `eslint-plugin-jsx-a11y` 6.10.2, `eslint-plugin-import-x` 4.18.1.
+- `typescript-eslint` 8.72.2 declara peer `typescript >=4.8.4 <6.1.0`: NO soporta TypeScript 7. `typescript` 6.0.3 exacto es devDependency SOLO de la raíz y solo para lint. Las apps y paquetes siguen con 7.0.2 para tsc, build y typecheck. Es TEMPORAL hasta que typescript-eslint soporte TS 7 (pendiente en `open-questions.md`). Las reglas son sin información de tipos (`strict`, no `strictTypeChecked`).
+- Reglas: sin `any`, `enum`, `!` ni `as` (solo `as const`), `dangerouslySetInnerHTML` prohibido, `Date.now()`, `new Date()` sin argumentos y `performance.now()` prohibidos fuera de `apps/game/src/clock.ts` y `apps/api/src/platform/clock.ts`. jsx-a11y y reglas de hooks solo en `apps/game`.
+- Límites: `import-x/no-cycle` y `import-x/no-restricted-paths` (paquetes no importan de apps, entre apps no hay imports, mapa de módulos del back del doc 02 con `platform` como transversal, supuesto mío). Al agregar un módulo del back se edita `API_MODULE_DEPS` en `eslint.config.js`. La prueba de límites vive en `tools/` (paquete `@patio/tools`, solo pruebas).
+- `Clock` del back gana `monotonicMs()` para medir duraciones (antes `app.ts` llamaba a `performance.now()`). Dos desactivaciones justificadas en una línea: el `as DayKey` de `Clock.today()` y el `tabIndex` de la región con scroll de `PerfPanel`.
 
 ## Decisiones anteriores (resumen)
 

@@ -84,7 +84,9 @@ Orden de autoridad si hay contradicción: `docs/memory/decisions.md` (lo más re
 
 ## Comandos
 
-Todavía no existen (no hay código). Convención de scripts raíz que se creará al empezar: `pnpm dev:api`, `pnpm dev:game`, `pnpm dev:panel`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm contracts:generate`, `pnpm themes:check`, `pnpm build`. Cuando existan, actualiza esta sección.
+Existen: `pnpm db:up` (Mongo local en Docker, espera a que esté healthy; hace falta para `pnpm test` completo y `pnpm dev:api`), `pnpm db:down` (baja el contenedor; NO borra el volumen `patio-mongo-data`), `pnpm dev:api` (compila y levanta la API en modo desarrollo), `pnpm dev:game`, `pnpm typecheck`, `pnpm test` (contratos, API y límites; las pruebas de integración fallan con un mensaje claro si Mongo no está arriba), `pnpm contracts:generate` (tipos desde `packages/contracts/schemas`; no editar `src/generated`), `pnpm build`, `pnpm lint` (ESLint 9, config en `eslint.config.js`; la prueba de límites de importación corre con `pnpm test`).
+
+Por crear: `pnpm dev:panel`, `pnpm test:e2e`, `pnpm themes:check`. Cuando existan, actualiza esta sección.
 
 ## Mantenimiento de este harness
 

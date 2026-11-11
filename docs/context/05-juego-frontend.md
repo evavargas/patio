@@ -60,7 +60,7 @@ Plugins mínimos: Preferences, App (pausa y reanudación), StatusBar (a confirma
 
 ## Prueba de rendimiento (primera tarea de código)
 
-Ver skill `perf-gate-3d`. Modo `?perf=1`, guion de 60 s, registra fps promedio y peor 1 %, tiempo de cuadro, draw calls, triángulos, memoria y tiempo hasta poder jugar; resumen en pantalla y JSON exportable; se mide en cada dispositivo de prueba, en navegador y en el WebView. Criterio propuesto: 30 fps sostenidos en el dispositivo más modesto con el peor 1 % no menor a 20 (a fijar con los dispositivos reales; faltan marca, versión de Android y memoria).
+Construida en `apps/game` (ver su README). Medición en dispositivo real SALTEADA por decisión del 2026-11-11: el criterio de abajo queda sin evaluar. Ver skill `perf-gate-3d`. Modo `?perf=1`, guion de 60 s, registra fps promedio y peor 1 %, tiempo de cuadro, draw calls, triángulos, memoria y tiempo hasta poder jugar; resumen en pantalla y JSON exportable; se mide en cada dispositivo de prueba, en navegador y en el WebView. Criterio propuesto: 30 fps sostenidos en el dispositivo más modesto con el peor 1 % no menor a 20 (a fijar con los dispositivos reales; faltan marca, versión de Android y memoria).
 
 ## Prototipo visual
 
