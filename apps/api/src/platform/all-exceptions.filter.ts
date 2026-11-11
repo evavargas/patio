@@ -13,6 +13,8 @@ const MESSAGES: Partial<Record<ErrorCode, string>> = {
   GROUP_NOT_FOUND: "No encontramos ese grupo. Revisa el codigo.",
   GROUP_INACTIVE: "Ese grupo no esta disponible por ahora.",
   GROUP_FULL: "Ese grupo ya esta completo.",
+  INVALID_TOKEN: "Tu sesion no es valida. Ingresa tu codigo de recuperacion.",
+  RECOVERY_CODE_INVALID: "No encontramos ese codigo. Revisalo e intenta de nuevo.",
   RATE_LIMITED: "Hubo demasiados intentos. Proba de nuevo mas tarde.",
 };
 

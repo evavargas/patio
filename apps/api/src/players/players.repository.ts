@@ -50,4 +50,18 @@ export class PlayersRepository implements OnModuleInit {
   countInGroup(groupId: string): Promise<number> {
     return this.collection.countDocuments({ groupId });
   }
+
+  /** 1 lectura por el indice unico `tokenHash`. Solo lo que el player propio puede ver. */
+  findByTokenHash(tokenHash: string): Promise<Pick<PlayerDoc, "_id" | "nickname" | "score" | "tokenHash"> | null> {
+    return this.collection.findOne({ tokenHash }, { projection: { nickname: 1, score: 1, tokenHash: 1 } });
+  }
+
+  /** 1 update atomico por `recoveryHash`: guarda el hash del token nuevo y descarta el anterior. null si el codigo no existe. */
+  replaceTokenByRecoveryHash(recoveryHash: string, tokenHash: string): Promise<Pick<PlayerDoc, "_id" | "nickname"> | null> {
+    return this.collection.findOneAndUpdate(
+      { recoveryHash },
+      { $set: { tokenHash } },
+      { returnDocument: "after", projection: { nickname: 1 } },
+    );
+  }
 }

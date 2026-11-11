@@ -20,6 +20,7 @@ API de Patio (NestJS 12, un solo servicio modular). Hoy existen `platform` (`GET
 | `RECOVERY_HMAC_SECRET` | valor falso de desarrollo solo con `NODE_ENV` development/test | Obligatoria en producción, mínimo 32 caracteres. Nunca se imprime |
 | `TRUST_PROXY_HOPS` | `0` | Saltos de proxy de confianza para leer la IP en `X-Forwarded-For` (0 a 5). 0 = se ignora la cabecera. En Cloud Run, `1` (por verificar) |
 | `RATE_LIMIT_REGISTER_MAX`, `RATE_LIMIT_REGISTER_WINDOW_SECONDS` | `20`, `3600` | Registro por IP (sin medir) |
+| `RATE_LIMIT_RECOVER_MAX`, `RATE_LIMIT_RECOVER_WINDOW_SECONDS` | `100`, `3600` | Recuperación con código por IP; cuenta TODO pedido, también los inválidos (sin medir) |
 | `RATE_LIMIT_GROUP_CODE_MAX`, `RATE_LIMIT_GROUP_CODE_WINDOW_SECONDS` | `100`, `3600` | Códigos de grupo inexistentes por IP (sin medir) |
 | `CORS_ORIGINS` | vacío (ningún origen) | lista separada por comas de orígenes exactos (`https://host[:puerto]`). El comodín `*` se rechaza |
 

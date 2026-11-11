@@ -13,7 +13,7 @@ export interface AppConfig {
   recoveryHmacSecret: string;
   /** Saltos de proxy en los que se confia para leer la IP en X-Forwarded-For. 0 = ninguno. */
   trustProxyHops: number;
-  limits: { register: RateRule; groupCode: RateRule };
+  limits: { register: RateRule; groupCode: RateRule; recover: RateRule };
 }
 
 /** Valor SOLO para desarrollo y pruebas, claramente falso: no protege nada. */
@@ -83,6 +83,10 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
     groupCode: {
       max: positiveInt("RATE_LIMIT_GROUP_CODE_MAX", 100),
       windowSeconds: positiveInt("RATE_LIMIT_GROUP_CODE_WINDOW_SECONDS", 3600),
+    },
+    recover: {
+      max: positiveInt("RATE_LIMIT_RECOVER_MAX", 100),
+      windowSeconds: positiveInt("RATE_LIMIT_RECOVER_WINDOW_SECONDS", 3600),
     },
   };
 

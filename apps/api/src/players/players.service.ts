@@ -1,6 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { PlayerId } from "@patio/contracts";
+import { type PlayerId, type RecoverPlayerResponse, isPlayerId, isPlayerToken, isRecoverPlayerRequest } from "@patio/contracts";
+import { timingSafeEqual } from "node:crypto";
 import { generatePlayerId, generateRecoveryCode, generateToken, hashRecoveryCode, hashToken } from "../auth/credentials.ts";
+import { RateLimitService } from "../rate-limit/rate-limit.service.ts";
 import { type AppConfig, CONFIG } from "../platform/config.ts";
 import { DomainException } from "../platform/domain.exception.ts";
 import { NicknameService } from "../word-filter/nickname.service.ts";
@@ -15,6 +17,13 @@ export interface NewIdentity {
   recoveryHash: string;
 }
 
+/** Lo que el guard deja en el pedido: solo datos del propio player, nunca hashes ni nivel. */
+export interface AuthenticatedPlayer {
+  playerId: string;
+  nickname: string;
+  score: number;
+}
+
 export interface NewPlayer {
   identity: NewIdentity;
   nickname: string;
@@ -26,9 +35,11 @@ export interface NewPlayer {
 @Injectable()
 export class PlayersService {
   constructor(
-    @Inject(CONFIG) private readonly config: Pick<AppConfig, "recoveryHmacSecret">,
+    @Inject(CONFIG) private readonly config: Pick<AppConfig, "recoveryHmacSecret" | "limits">,
     @Inject(NicknameService) private readonly nicknames: Pick<NicknameService, "check">,
-    @Inject(PlayersRepository) private readonly repository: Pick<PlayersRepository, "insert" | "delete" | "countInGroup">,
+    @Inject(RateLimitService) private readonly rateLimit: Pick<RateLimitService, "hit">,
+    @Inject(PlayersRepository)
+    private readonly repository: Pick<PlayersRepository, "insert" | "delete" | "countInGroup" | "findByTokenHash" | "replaceTokenByRecoveryHash">,
   ) {}
 
   /** Apodo recortado, o NICKNAME_NOT_ALLOWED sin decir por que. */
@@ -75,5 +86,31 @@ export class PlayersService {
 
   countInGroup(groupId: string): Promise<number> {
     return this.repository.countInGroup(groupId);
+  }
+
+  /** Valor de `Authorization` -> player, o null por CUALQUIER causa (ausente, malformado, desconocido, borrado). 1 lectura, 0 si el formato no sirve. */
+  async authenticate(header: string | undefined): Promise<AuthenticatedPlayer | null> {
+    const token = /^Bearer (\S+)$/.exec(header ?? "")?.[1];
+    if (token === undefined || !isPlayerToken(token)) return null;
+    const hash = hashToken(token);
+    const doc = await this.repository.findByTokenHash(hash);
+    // La busqueda ya es por hash (no filtra el token); la comparacion en tiempo constante es defensa adicional.
+    if (doc === null || !timingSafeEqual(Buffer.from(hash), Buffer.from(doc.tokenHash))) return null;
+    return { playerId: doc._id, nickname: doc.nickname, score: doc.score };
+  }
+
+  /**
+   * POST /v1/players/recover. 2 operaciones: limite por IP (cuenta TODO pedido, tambien los invalidos) y un solo update
+   * atomico que cambia el hash del token. Codigo inexistente y codigo de un player borrado son indistinguibles: misma
+   * operacion, mismo error. El codigo no cambia.
+   */
+  async recover(ip: string, body: unknown): Promise<RecoverPlayerResponse> {
+    if (!(await this.rateLimit.hit(`recover:${ip}`, this.config.limits.recover))) throw new DomainException("RATE_LIMITED", 429);
+    if (!isRecoverPlayerRequest(body)) throw new DomainException("VALIDATION_FAILED", 400);
+    const token = generateToken();
+    const player = await this.repository.replaceTokenByRecoveryHash(hashRecoveryCode(body.recoveryCode, this.config.recoveryHmacSecret), hashToken(token));
+    if (player === null) throw new DomainException("RECOVERY_CODE_INVALID", 404);
+    if (!isPlayerId(player._id)) throw new Error("ID guardado fuera del contrato");
+    return { playerId: player._id, token, nickname: player.nickname };
   }
 }

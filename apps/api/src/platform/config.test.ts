@@ -14,6 +14,7 @@ describe("loadConfig", () => {
       limits: {
         register: { max: 20, windowSeconds: 3600 },
         groupCode: { max: 100, windowSeconds: 3600 },
+        recover: { max: 100, windowSeconds: 3600 },
       },
     });
   });
@@ -32,6 +33,8 @@ describe("loadConfig", () => {
       RATE_LIMIT_REGISTER_WINDOW_SECONDS: "60",
       RATE_LIMIT_GROUP_CODE_MAX: "7",
       RATE_LIMIT_GROUP_CODE_WINDOW_SECONDS: "120",
+      RATE_LIMIT_RECOVER_MAX: "9",
+      RATE_LIMIT_RECOVER_WINDOW_SECONDS: "30",
     });
     expect(config).toEqual({
       port: 3000,
@@ -41,7 +44,7 @@ describe("loadConfig", () => {
       mongoDb: "patio",
       recoveryHmacSecret: "x".repeat(32),
       trustProxyHops: 1,
-      limits: { register: { max: 5, windowSeconds: 60 }, groupCode: { max: 7, windowSeconds: 120 } },
+      limits: { register: { max: 5, windowSeconds: 60 }, groupCode: { max: 7, windowSeconds: 120 }, recover: { max: 9, windowSeconds: 30 } },
     });
   });
 
@@ -63,6 +66,8 @@ describe("loadConfig", () => {
     [{ RATE_LIMIT_REGISTER_WINDOW_SECONDS: "x" }, "RATE_LIMIT_REGISTER_WINDOW_SECONDS"],
     [{ RATE_LIMIT_GROUP_CODE_MAX: "-5" }, "RATE_LIMIT_GROUP_CODE_MAX"],
     [{ RATE_LIMIT_GROUP_CODE_WINDOW_SECONDS: "0" }, "RATE_LIMIT_GROUP_CODE_WINDOW_SECONDS"],
+    [{ RATE_LIMIT_RECOVER_MAX: "0" }, "RATE_LIMIT_RECOVER_MAX"],
+    [{ RATE_LIMIT_RECOVER_WINDOW_SECONDS: "x" }, "RATE_LIMIT_RECOVER_WINDOW_SECONDS"],
   ])("rechaza %j", (env, name) => {
     expect(() => loadConfig({ NODE_ENV: "test", ...env })).toThrow(name);
   });

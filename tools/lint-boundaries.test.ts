@@ -73,6 +73,11 @@ describe("reglas de lint del repo", () => {
     expect(await rulesFor("apps/api/src/auth/x.ts", 'import "../rate-limit/y.ts";\n')).toContain("import-x/no-restricted-paths");
   });
 
+  it("players puede usar rate-limit (recuperar) pero no groups ni membership", async () => {
+    expect(await rulesFor("apps/api/src/players/x.ts", 'import "../rate-limit/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/players/x.ts", 'import "../groups/y.ts";\n')).toContain("import-x/no-restricted-paths");
+  });
+
   it("rate-limit es transversal pero no puede importar de modulos de negocio", async () => {
     expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../rate-limit/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
     expect(await rulesFor("apps/api/src/rate-limit/x.ts", 'import "../players/y.ts";\n')).toContain("import-x/no-restricted-paths");
