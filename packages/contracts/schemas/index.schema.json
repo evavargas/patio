@@ -19,6 +19,9 @@
     "BannedWordsResponse": { "$ref": "banned-words.schema.json#/$defs/BannedWordsResponse" },
     "RegisterPlayerRequest": { "$ref": "player.schema.json#/$defs/RegisterPlayerRequest" },
     "RegisterPlayerResponse": { "$ref": "player.schema.json#/$defs/RegisterPlayerResponse" },
+    "RecoverPlayerRequest": { "$ref": "player.schema.json#/$defs/RecoverPlayerRequest" },
+    "RecoverPlayerResponse": { "$ref": "player.schema.json#/$defs/RecoverPlayerResponse" },
+    "MeResponse": { "$ref": "player.schema.json#/$defs/MeResponse" },
     "HealthResponse": { "$ref": "health.schema.json#/$defs/HealthResponse" }
   }
 }

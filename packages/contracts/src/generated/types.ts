@@ -256,6 +256,36 @@ export interface RegisterPlayerResponse {
   recoveryCode: RecoveryCode;
 }
 /**
+ * Cuerpo de POST /v1/players/recover (publico). `recoveryCode` en mayusculas: el cliente normaliza antes de enviar. Los servidores toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "RecoverPlayerRequest".
+ */
+export interface RecoverPlayerRequest {
+  recoveryCode: RecoveryCode;
+}
+/**
+ * Respuesta de POST /v1/players/recover (200). `token` es NUEVO e invalida el anterior. El codigo de recuperacion no cambia y no se devuelve. Sin nivel. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "RecoverPlayerResponse".
+ */
+export interface RecoverPlayerResponse {
+  playerId: PlayerId;
+  token: PlayerToken;
+  nickname: string;
+}
+/**
+ * Respuesta de GET /v1/me (200, con token del player). Solo datos del propio player. Sin nivel. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "MeResponse".
+ */
+export interface MeResponse {
+  nickname: string;
+  score: number;
+}
+/**
  * Respuesta de GET /v1/healthz. No toca la base. Los clientes toleran campos nuevos.
  *
  * This interface was referenced by `IndexSchemaJson`'s JSON-Schema

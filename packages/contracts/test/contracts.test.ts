@@ -12,6 +12,9 @@ import {
   isPlayerId,
   isRegisterPlayerRequest,
   isRegisterPlayerResponse,
+  isRecoverPlayerRequest,
+  isRecoverPlayerResponse,
+  isMeResponse,
 } from "../src/index.ts";
 
 const dir = (kind: "valid" | "invalid"): string[] =>
@@ -116,8 +119,8 @@ describe("banned-words", () => {
 describe("registro de player", () => {
   const ex = (kind: "requests" | "responses", f: string): unknown =>
     JSON.parse(readFileSync(join(import.meta.dirname, "../examples", kind, f), "utf8"));
-  const files = (kind: "requests" | "responses", ext: string): string[] =>
-    readdirSync(join(import.meta.dirname, "../examples", kind)).filter((f) => f.endsWith(ext)).sort();
+  const files = (kind: "requests" | "responses", ext: string, prefix = "register-player"): string[] =>
+    readdirSync(join(import.meta.dirname, "../examples", kind)).filter((f) => f.startsWith(prefix) && f.endsWith(ext)).sort();
 
   it.each(files("requests", ".valid.json"))("pedido: acepta %s", (f) => {
     expect(isRegisterPlayerRequest(ex("requests", f))).toBe(true);
@@ -150,5 +153,41 @@ describe("registro de player", () => {
     for (const bad of ["0", "O", "1", "I", "L"]) {
       expect(isRegisterPlayerRequest({ nickname: "a", termsVersion: "1", groupCode: `ABCDE${bad}` })).toBe(false);
     }
+  });
+});
+
+describe("recuperar player y perfil", () => {
+  const keysOf = (f: string): Record<string, unknown> =>
+    JSON.parse(readFileSync(join(import.meta.dirname, "../examples/responses", f), "utf8"));
+  const ex = (kind: "requests" | "responses", f: string): unknown =>
+    JSON.parse(readFileSync(join(import.meta.dirname, "../examples", kind, f), "utf8"));
+  const files = (kind: "requests" | "responses", prefix: string, ext: string): string[] =>
+    readdirSync(join(import.meta.dirname, "../examples", kind)).filter((f) => f.startsWith(prefix) && f.endsWith(ext)).sort();
+
+  it.each(files("requests", "recover-player", ".valid.json"))("pedido: acepta %s", (f) => {
+    expect(isRecoverPlayerRequest(ex("requests", f))).toBe(true);
+  });
+  it.each(files("requests", "recover-player", ".invalid.json"))("pedido: rechaza %s", (f) => {
+    expect(isRecoverPlayerRequest(ex("requests", f))).toBe(false);
+  });
+  it("pedido: tolera campos nuevos", () => {
+    expect(isRecoverPlayerRequest({ recoveryCode: "K7QM2XPT", extra: 1 })).toBe(true);
+  });
+  it("respuesta de recuperar: acepta el ejemplo, rechaza token corto o sin apodo, solo trae playerId, token y nickname", () => {
+    expect(isRecoverPlayerResponse(ex("responses", "recover-player.valid.json"))).toBe(true);
+    expect(isRecoverPlayerResponse(ex("responses", "recover-player.invalid.json"))).toBe(false);
+    expect(isRecoverPlayerResponse({ playerId: "ABCDEFGH2345", token: "a".repeat(43) })).toBe(false);
+    expect(Object.keys(keysOf("recover-player.valid.json")).sort()).toEqual(["nickname", "playerId", "token"]);
+  });
+  it("respuesta de recuperar: no devuelve el codigo (no cambia, el cliente ya lo tiene)", () => {
+    expect(Object.keys(keysOf("recover-player.valid.json"))).not.toContain("recoveryCode");
+  });
+  it("perfil: acepta el ejemplo, rechaza puntaje negativo o decimal, y no trae nivel", () => {
+    expect(isMeResponse(ex("responses", "me.valid.json"))).toBe(true);
+    expect(isMeResponse(ex("responses", "me.invalid.json"))).toBe(false);
+    expect(isMeResponse({ nickname: "a", score: 1.5 })).toBe(false);
+    expect(isMeResponse({ nickname: "a" })).toBe(false);
+    expect(isMeResponse({ nickname: "a", score: 0, extra: 1 })).toBe(true);
+    expect(Object.keys(keysOf("me.valid.json")).sort()).toEqual(["nickname", "score"]);
   });
 });

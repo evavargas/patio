@@ -6,22 +6,100 @@
       "title": "RegisterPlayerRequest",
       "description": "Cuerpo de POST /v1/players (publico). `nickname`: maximo 20 caracteres, lo valida el servidor contra la lista de palabras (NICKNAME_NOT_ALLOWED); el tope de 64 del schema solo acota el cuerpo. `termsVersion`: version de los terminos que el player acepto; el servidor guarda version y fecha. Los servidores toleran campos nuevos.",
       "type": "object",
-      "required": ["nickname", "termsVersion"],
+      "required": [
+        "nickname",
+        "termsVersion"
+      ],
       "properties": {
-        "nickname": { "type": "string", "minLength": 1, "maxLength": 64 },
-        "groupCode": { "$ref": "primitives.schema.json#/$defs/GroupCode" },
-        "termsVersion": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,32}$" }
+        "nickname": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "groupCode": {
+          "$ref": "primitives.schema.json#/$defs/GroupCode"
+        },
+        "termsVersion": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,32}$"
+        }
       }
     },
     "RegisterPlayerResponse": {
       "title": "RegisterPlayerResponse",
       "description": "Respuesta de POST /v1/players (201). `token` y `recoveryCode` solo existen en claro en esta respuesta. Sin nivel. Los clientes toleran campos nuevos.",
       "type": "object",
-      "required": ["playerId", "token", "recoveryCode"],
+      "required": [
+        "playerId",
+        "token",
+        "recoveryCode"
+      ],
       "properties": {
-        "playerId": { "$ref": "primitives.schema.json#/$defs/PlayerId" },
-        "token": { "$ref": "primitives.schema.json#/$defs/PlayerToken" },
-        "recoveryCode": { "$ref": "primitives.schema.json#/$defs/RecoveryCode" }
+        "playerId": {
+          "$ref": "primitives.schema.json#/$defs/PlayerId"
+        },
+        "token": {
+          "$ref": "primitives.schema.json#/$defs/PlayerToken"
+        },
+        "recoveryCode": {
+          "$ref": "primitives.schema.json#/$defs/RecoveryCode"
+        }
+      }
+    },
+    "RecoverPlayerRequest": {
+      "title": "RecoverPlayerRequest",
+      "description": "Cuerpo de POST /v1/players/recover (publico). `recoveryCode` en mayusculas: el cliente normaliza antes de enviar. Los servidores toleran campos nuevos.",
+      "type": "object",
+      "required": [
+        "recoveryCode"
+      ],
+      "properties": {
+        "recoveryCode": {
+          "$ref": "primitives.schema.json#/$defs/RecoveryCode"
+        }
+      }
+    },
+    "RecoverPlayerResponse": {
+      "title": "RecoverPlayerResponse",
+      "description": "Respuesta de POST /v1/players/recover (200). `token` es NUEVO e invalida el anterior. El codigo de recuperacion no cambia y no se devuelve. Sin nivel. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": [
+        "playerId",
+        "token",
+        "nickname"
+      ],
+      "properties": {
+        "playerId": {
+          "$ref": "primitives.schema.json#/$defs/PlayerId"
+        },
+        "token": {
+          "$ref": "primitives.schema.json#/$defs/PlayerToken"
+        },
+        "nickname": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "MeResponse": {
+      "title": "MeResponse",
+      "description": "Respuesta de GET /v1/me (200, con token del player). Solo datos del propio player. Sin nivel. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": [
+        "nickname",
+        "score"
+      ],
+      "properties": {
+        "nickname": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }
