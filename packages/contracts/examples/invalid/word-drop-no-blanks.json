@@ -1,0 +1,1 @@
+{ "text": "x", "mechanic": { "type": "wordDrop", "schemaVersion": 1, "config": { "template": "El {a}", "blanks": [], "words": ["gato"] } }, "difficulty": 1, "assets": [] }

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "drag-drop.schema.json",
+  "title": "DragDropMechanic",
+  "type": "object",
+  "required": ["type", "schemaVersion", "config"],
+  "properties": {
+    "type": { "const": "dragDrop" },
+    "schemaVersion": { "const": 1 },
+    "config": {
+      "title": "DragDropConfigV1",
+      "type": "object",
+      "required": ["items", "containers", "rule"],
+      "properties": {
+        "items": { "$ref": "#/$defs/Group" },
+        "containers": { "$ref": "#/$defs/Group" },
+        "rule": {
+          "title": "DragDropRule",
+          "oneOf": [
+            {
+              "title": "EqualShareRule",
+              "type": "object",
+              "required": ["type"],
+              "properties": { "type": { "const": "equalShare" } }
+            },
+            {
+              "title": "TargetCountsRule",
+              "type": "object",
+              "required": ["type", "counts"],
+              "properties": {
+                "type": { "const": "targetCounts" },
+                "counts": {
+                  "description": "Cantidad objetivo por contenedor, en orden.",
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Group": {
+      "title": "DragDropGroup",
+      "type": "object",
+      "required": ["assetId", "count"],
+      "properties": {
+        "assetId": { "$ref": "primitives.schema.json#/$defs/AssetId" },
+        "count": { "$ref": "primitives.schema.json#/$defs/Count" }
+      }
+    }
+  }
+}

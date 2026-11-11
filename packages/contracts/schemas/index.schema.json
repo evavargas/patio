@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "index.schema.json",
+  "description": "Entrada de la generacion de tipos. No se valida contra este archivo.",
+  "$defs": {
+    "Challenge": { "$ref": "challenge.schema.json" },
+    "DayKey": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+    "IsoDateTime": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+    "PlayerId": { "$ref": "primitives.schema.json#/$defs/PlayerId" },
+    "GroupId": { "$ref": "primitives.schema.json#/$defs/GroupId" },
+    "ChallengeId": { "$ref": "primitives.schema.json#/$defs/ChallengeId" },
+    "DaySetId": { "$ref": "primitives.schema.json#/$defs/DaySetId" },
+    "AccountId": { "$ref": "primitives.schema.json#/$defs/AccountId" },
+    "ErrorCode": { "$ref": "error.schema.json#/$defs/ErrorCode" },
+    "ErrorBody": { "$ref": "error.schema.json#/$defs/ErrorBody" },
+    "BannedWordsResponse": { "$ref": "banned-words.schema.json#/$defs/BannedWordsResponse" },
+    "HealthResponse": { "$ref": "health.schema.json#/$defs/HealthResponse" }
+  }
+}

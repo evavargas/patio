@@ -1,0 +1,16 @@
+{
+  "text": "Poné 3 manzanas en la primera bolsa y 5 en la segunda.",
+  "mechanic": {
+    "type": "dragDrop",
+    "schemaVersion": 1,
+    "config": {
+      "items": { "assetId": "manzana", "count": 8 },
+      "containers": { "assetId": "bolsa", "count": 2 },
+      "rule": { "type": "targetCounts", "counts": [3, 5] }
+    }
+  },
+  "difficulty": 1,
+  "points": 15,
+  "family": "resolver",
+  "assets": ["manzana", "bolsa"]
+}

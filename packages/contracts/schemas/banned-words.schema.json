@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "banned-words.schema.json",
+  "$defs": {
+    "BannedWordsResponse": {
+      "title": "BannedWordsResponse",
+      "description": "Respuesta de GET /v1/banned-words. `version` sube con cada cambio de la lista (0 = lista nunca cargada). Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": ["version", "words"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 0 },
+        "words": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    }
+  }
+}

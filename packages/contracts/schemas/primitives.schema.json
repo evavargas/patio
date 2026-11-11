@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "primitives.schema.json",
+  "$defs": {
+    "DayKey": {
+      "title": "DayKey",
+      "description": "Dia calendario YYYY-MM-DD en la zona del dia.",
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+      "tsType": "string & { readonly __brand: 'DayKey' }"
+    },
+    "IsoDateTime": {
+      "title": "IsoDateTime",
+      "description": "Instante ISO 8601 con zona.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "PlayerId": {
+      "title": "PlayerId",
+      "description": "ID publico del player: 12 caracteres del alfabeto de 31 simbolos. No es credencial.",
+      "type": "string",
+      "pattern": "^[A-HJ-KM-NP-Z2-9]{12}$",
+      "tsType": "string & { readonly __brand: 'PlayerId' }"
+    },
+    "GroupId": {
+      "title": "GroupId",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "tsType": "string & { readonly __brand: 'GroupId' }"
+    },
+    "ChallengeId": {
+      "title": "ChallengeId",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "tsType": "string & { readonly __brand: 'ChallengeId' }"
+    },
+    "DaySetId": {
+      "title": "DaySetId",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "tsType": "string & { readonly __brand: 'DaySetId' }"
+    },
+    "AccountId": {
+      "title": "AccountId",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "tsType": "string & { readonly __brand: 'AccountId' }"
+    },
+    "AssetId": {
+      "title": "AssetId",
+      "description": "Id de un asset del catalogo cerrado. Que exista en el manifiesto se valida fuera del schema.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "Count": {
+      "title": "Count",
+      "description": "Entero positivo.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "FieldId": {
+      "title": "FieldId",
+      "type": "string",
+      "pattern": "^[a-z][a-zA-Z0-9]{0,15}$"
+    }
+  }
+}

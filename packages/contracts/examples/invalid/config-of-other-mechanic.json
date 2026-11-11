@@ -1,0 +1,1 @@
+{ "text": "x", "mechanic": { "type": "numberInput", "schemaVersion": 1, "config": { "template": "El {a}", "blanks": [], "words": [] } }, "difficulty": 1, "assets": [] }

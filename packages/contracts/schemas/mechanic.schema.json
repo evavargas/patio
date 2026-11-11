@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mechanic.schema.json",
+  "title": "Mechanic",
+  "description": "Union discriminada por type. Conjunto cerrado.",
+  "oneOf": [
+    { "$ref": "drag-drop.schema.json" },
+    { "$ref": "number-input.schema.json" },
+    { "$ref": "word-drop.schema.json" }
+  ]
+}

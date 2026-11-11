@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "health.schema.json",
+  "$defs": {
+    "HealthResponse": {
+      "title": "HealthResponse",
+      "description": "Respuesta de GET /v1/healthz. No toca la base. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "const": "ok" }
+      }
+    }
+  }
+}

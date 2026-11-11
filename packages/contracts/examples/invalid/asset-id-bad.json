@@ -1,0 +1,1 @@
+{ "text": "x", "mechanic": { "type": "numberInput", "schemaVersion": 1, "config": { "expression": "{a}", "fields": [{ "id": "a", "expected": 1 }] } }, "difficulty": 1, "assets": ["../etc/passwd"] }

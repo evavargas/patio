@@ -1,0 +1,1 @@
+{ "text": "x", "mechanic": { "type": "dragDrop", "schemaVersion": 1, "config": { "items": { "assetId": "manzana", "count": 0 }, "containers": { "assetId": "bolsa", "count": 4 }, "rule": { "type": "equalShare" } } }, "difficulty": 1, "assets": [] }

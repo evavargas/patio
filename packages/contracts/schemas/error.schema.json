@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "error.schema.json",
+  "$defs": {
+    "ErrorCode": {
+      "title": "ErrorCode",
+      "description": "Codigos de dominio estables. Solo se agregan, nunca se renombran.",
+      "enum": [
+        "ACCOUNT_EMAIL_TAKEN",
+        "ACCOUNT_INACTIVE",
+        "ACCOUNT_NOT_FOUND",
+        "CANNOT_DELETE_LAST_ADMINISTRATOR",
+        "CANNOT_DELETE_OWN_ACCOUNT",
+        "CHALLENGE_NOT_FOUND",
+        "CHALLENGE_NOT_IN_SET",
+        "DAY_ACCESS_NOT_FOUND",
+        "DAY_SET_NOT_FOUND",
+        "FORBIDDEN_ROLE",
+        "FORBIDDEN_SCOPE",
+        "GROUP_FULL",
+        "GROUP_INACTIVE",
+        "GROUP_NOT_FOUND",
+        "INTERNAL_ERROR",
+        "INVALID_CREDENTIALS",
+        "INVALID_REFRESH_TOKEN",
+        "INVALID_TOKEN",
+        "NICKNAME_NOT_ALLOWED",
+        "PASSWORD_CHANGE_REQUIRED",
+        "PLAYER_ALREADY_IN_GROUP",
+        "PLAYER_NOT_FOUND",
+        "RATE_LIMITED",
+        "RECOVERY_CODE_INVALID",
+        "RESULT_DATE_NOT_ALLOWED",
+        "ROUTE_NOT_FOUND",
+        "SET_LOCKED",
+        "UNSUPPORTED_SCHEMA_VERSION",
+        "VALIDATION_FAILED"
+      ]
+    },
+    "ErrorBody": {
+      "title": "ErrorBody",
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "$ref": "#/$defs/ErrorCode" },
+        "message": { "type": "string", "description": "Sin datos personales." },
+        "details": { "type": "object" }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "text": "Completá la oración con las palabras que faltan.",
+  "mechanic": {
+    "type": "wordDrop",
+    "schemaVersion": 1,
+    "config": {
+      "template": "El {a} come {b}.",
+      "blanks": [
+        { "id": "a", "correct": "gato" },
+        { "id": "b", "correct": "pescado" }
+      ],
+      "words": ["gato", "pescado", "mesa"]
+    }
+  },
+  "difficulty": 3,
+  "family": "crear",
+  "assets": []
+}

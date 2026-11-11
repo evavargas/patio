@@ -1,0 +1,13 @@
+{
+  "text": "¿Qué número falta?",
+  "mechanic": {
+    "type": "numberInput",
+    "schemaVersion": 1,
+    "config": {
+      "expression": "7 + {a} = 12",
+      "fields": [{ "id": "a", "expected": 5 }]
+    }
+  },
+  "difficulty": 1,
+  "assets": []
+}

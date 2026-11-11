@@ -1,0 +1,14 @@
+{
+  "text": "Ayúdame a repartir estas 20 manzanas en las 4 bolsas.",
+  "mechanic": {
+    "type": "dragDrop",
+    "schemaVersion": 1,
+    "config": {
+      "items": { "assetId": "manzana", "count": 20 },
+      "containers": { "assetId": "bolsa", "count": 4 },
+      "rule": { "type": "equalShare" }
+    }
+  },
+  "difficulty": 2,
+  "assets": ["manzana", "bolsa"]
+}

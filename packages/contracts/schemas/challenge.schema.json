@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "challenge.schema.json",
+  "title": "Challenge",
+  "type": "object",
+  "required": ["text", "mechanic", "difficulty", "assets"],
+  "properties": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 300, "description": "Consigna. Texto plano, nunca HTML." },
+    "mechanic": { "$ref": "mechanic.schema.json" },
+    "difficulty": { "type": "integer", "minimum": 1 },
+    "points": { "type": "integer", "minimum": 0, "description": "Si falta, rige el de la dificultad." },
+    "family": { "enum": ["resolver", "descubrir", "crear"] },
+    "assets": { "type": "array", "items": { "$ref": "primitives.schema.json#/$defs/AssetId" } }
+  }
+}
