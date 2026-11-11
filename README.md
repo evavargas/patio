@@ -1,6 +1,6 @@
 # Patio
 
-Juego educativo 3D para niños de 6 a 10 años (Uruguay, con proyección a Latinoamérica) y un panel web para moderadores y administradores.
+Juego educativo 3D para niños de 6 a 11 años (Uruguay, con proyección a Latinoamérica) y un panel web para moderadores y administradores.
 
 El objetivo es que el niño comprenda y resuelva mejor ciertos problemas, **no** maximizar el tiempo de pantalla.
 
