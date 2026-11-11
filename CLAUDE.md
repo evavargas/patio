@@ -26,6 +26,7 @@ Este archivo es el índice. El detalle vive en `docs/context/`. Lee solo lo que 
 | Qué debe seguir compatible entre piezas | `docs/context/13-compatibilidad-entre-sistemas.md` |
 | Convenciones de código y nombres | `docs/context/14-convenciones-de-codigo.md` |
 | Assets, fuentes, licencias | `docs/context/15-recursos-y-assets.md` |
+| Prototipo visual (pantallas, Stitch) | `docs/design/prototipo-pantallas.md` |
 | Decisiones, pendientes, preferencias | `docs/memory/` (empieza por `MEMORY.md`) |
 
 Orden de autoridad si hay contradicción: `docs/memory/decisions.md` (lo más reciente) > `docs/context/` > documentos originales en `documentation/` (`Patio_arquitectura.docx`, `Patio_diseno_sistema_mvp.docx`, `Patio_investigacion.docx`). Si encuentras una contradicción, no adivines: avisa y propone cuál corregir.
@@ -37,8 +38,8 @@ Orden de autoridad si hay contradicción: `docs/memory/decisions.md` (lo más re
 | Capa | Tecnología |
 | --- | --- |
 | Monorepo | pnpm workspaces (Turborepo solo si hace falta) |
-| Juego | React + TypeScript + Vite, three.js con React Three Fiber, Rapier, Zustand, Tailwind, Capacitor (Android primero, iOS al final) |
-| Panel | React + TypeScript + Vite, React Router, TanStack Query y Table, shadcn/ui + Tailwind, Recharts, dnd-kit |
+| Juego | React + TypeScript + Vite, three.js con React Three Fiber, Rapier, Zustand, Tailwind, Capacitor (Android primero, iOS al final), i18n (librería por elegir) |
+| Panel | React + TypeScript + Vite, React Router, TanStack Query y Table, shadcn/ui + Tailwind, Recharts, dnd-kit, i18n (librería por elegir) |
 | API | Node LTS, TypeScript, NestJS, un solo servicio modular |
 | Base | MongoDB Atlas M0 (sin transacciones, sin backups propios) |
 | Contratos | JSON Schema como fuente única de verdad (`packages/contracts`) |

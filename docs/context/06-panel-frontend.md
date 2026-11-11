@@ -1,6 +1,10 @@
 # Panel (apps/panel)
 
-Stack: React + TypeScript + Vite, React Router, TanStack Query y Table, Zustand mínimo, shadcn/ui sobre Tailwind, Recharts (v3 vía envoltorios de shadcn), dnd-kit (parte de `@dnd-kit/core`; revisar madurez de `@dnd-kit/react` al implementar). Todo en español. App de una sola página.
+Stack: React + TypeScript + Vite, React Router, TanStack Query y Table, Zustand mínimo, shadcn/ui sobre Tailwind, Recharts (v3 vía envoltorios de shadcn), dnd-kit (parte de `@dnd-kit/core`; revisar madurez de `@dnd-kit/react` al implementar). Textos con i18n (librería por elegir, la misma que el juego), idiomas español `es-UY` (por defecto) e inglés, selector de idioma en el menú de la cuenta. App de una sola página.
+
+## Diseño de referencia (Stitch)
+
+Proyecto Stitch "Patio Game Admin Panel", ID `3714659169895305440` (https://stitch.google.com/projects/3714659169895305440). Siete pantallas: Login, Accept invitation, Main dashboard, Challenges, Challenge editor, Metrics, Moderación y Actividad. La última la inventó Stitch con datos por player y se decidió borrarla: no se implementa (ver `docs/design/prototipo-pantallas.md`). Falta una vista de Rankings. Es referencia visual, no implementación: colores, tamaños y radios salen de tokens del tema, y los nombres de roles siguen `01-nomenclatura.md`.
 
 ## Estructura
 
@@ -31,3 +35,9 @@ Solo en la interfaz del administrador. Diálogo de confirmación que dice qué s
 ## Estados y avisos
 
 Cada vista tiene carga (esqueletos), vacío y error. Avisos con notificaciones breves; ventanas bloqueantes solo para confirmar acciones destructivas. Todo lo que se hace arrastrando tiene alternativa de teclado y de menú. Gráficos con color más etiqueta o patrón, resumen en texto y tabla con los mismos datos. El mapa de calor es una grilla de celdas con descripción accesible por celda.
+
+## Prototipo visual del panel
+
+Pantallas y sistema de diseño propuesto en `docs/design/prototipo-pantallas.md` (sección Panel). Hay diferencias con las vistas de este documento, anotadas en `docs/memory/open-questions.md`.
+
+Invitación de moderators: por correo (Gmail SMTP), con pantalla de aceptar invitación. Rankings y nivel de los players se muestran en el panel, nunca en el juego.

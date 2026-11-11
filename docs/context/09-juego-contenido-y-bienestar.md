@@ -68,3 +68,7 @@ Código de 6 caracteres. El jugador entra directo, sin aprobación. Errores amab
 ## Términos
 
 Pantalla dentro de la app con casilla de aceptación antes de jugar. Se guarda versión y fecha. La redacción de los textos está pendiente.
+
+## Fin del día (decidido)
+
+Después del cierre el player puede caminar libre por el patio con los juguetes apagados y sin interacción. No hay límite de tiempo forzado, ni salida forzada, ni chip de hora. El mensaje es amable y dice que puede seguir practicando la próxima vez.

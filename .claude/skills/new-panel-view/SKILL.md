@@ -15,7 +15,7 @@ Contexto: `docs/context/06-panel-frontend.md`, `03-backend.md` (matriz), `08-tem
 5. Si arrastra: dnd-kit con sensores de puntero, táctil y teclado, más alternativa "Mover a..." en menú. Actualización optimista que revierte si el servidor rechaza. Mover tiene "deshacer".
 6. Si elimina: skill `destructive-operation` (solo administrator, confirmación con impacto, sin deshacer).
 7. Gráficos: Recharts con color más etiqueta o patrón, resumen en texto y tabla equivalente. Los datos llegan hasta ayer y no se puede elegir hoy.
-8. Textos en español (identificadores en inglés con los tres roles). Sin colores ni tamaños literales: tokens.
+8. Textos desde el catálogo i18n, español `es-UY` por defecto e inglés (identificadores en inglés con los tres roles). Sin colores ni tamaños literales: tokens.
 9. Pruebas: permisos con administrator y moderator, flujo en Playwright, y axe en claro y oscuro (`a11y-check`).
 
 Salida: vista, rutas, permisos verificados y resultado de las pruebas.

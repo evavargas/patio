@@ -35,14 +35,13 @@ Cada fila: qué falta, quién puede resolverlo, qué bloquea. Cuando se cierra, 
 | Audio | No definido (música, efectos, lectura de la consigna). |
 | Almacenamiento de sesión en móvil | Preferences al inicio. Evaluar almacenamiento seguro para el código de recuperación. |
 | Objetos que se mueven solos | Definir si colisionan con el jugador. Entra en la prueba de rendimiento. |
-| Colores, tipografía y temas | Sin definir. Paleta provisional. Fuentes candidatas: Atkinson Hyperlegible, Lexend (confirmar licencia OFL). |
+| Colores, tipografía y temas | Paleta y fuente del prototipo: "Patio Uruguayo Sunset" con Lexend (`docs/design/stitch/DESIGN-patio-uruguayo-sunset.md`). Falta confirmar licencia OFL de Lexend y pasarlo a tokens de `packages/theme`. |
 | Formularios del panel | Propuesta: escritos a mano por mecánica. Ajuste respecto del diseño 6.4. Falta confirmar. |
 | Catálogo cerrado de assets | Propuesta: el moderador no sube archivos. Falta confirmar. |
 | Router y librerías | Zustand en el juego, React Router y TanStack Query en el panel. Confirmar al empezar. |
 | Valores reales de dificultades, niveles y reglas | Reemplazar los valores de prueba por los que defina una persona docente. |
 | Controles de movimiento para 6 y 7 años | Probar joystick y salto con niños del tramo menor. |
 | Cantidad de desafíos por día y duración | Probar con grupos reducidos, sin límite rígido. |
-| Invitación por correo a moderadores | Después del MVP. Requiere servicio de correo gratuito. |
 
 ## Documentos originales desactualizados (aplicar cuando corresponda)
 
@@ -55,3 +54,16 @@ Cada fila: qué falta, quién puede resolverlo, qué bloquea. Cuando se cierra, 
 ## V2 (no resolver ahora)
 
 Apodos duplicados dentro de un grupo, límite de frecuencia de gestos, silenciar compañeros, evaluación de tiendas para sala cerrada sin chat, rendimiento de dibujar 50 avatares animados, coincidencia horaria (sala vacía).
+
+## Del prototipo visual (a resolver sin adivinar)
+
+| Tema | Detalle |
+| --- | --- |
+| Gmail SMTP | Verificar el límite diario de envíos de Gmail (fuente oficial y fecha). Revisar que la librería de envío (por elegir) no rompa "sin SDK de terceros". Confirmar que la contraseña de aplicación NO esté en `.env.example`. |
+| Librería i18n | Idiomas decididos: `es-UY` (por defecto) e inglés, en juego y panel. Falta elegir la librería (licencia, peso, sin telemetría). Los textos legales también pasan a tener versión en inglés (a definir). |
+| Vistas del panel | Las de `06` difieren de la navegación del prototipo (Jugadores, Desafíos, Métricas, Moderadores, Ajustes). Alinear. |
+| Métrica de duración de sesión | El prototipo propone la mediana como contrapeso de bienestar. Verificar si el servidor guarda ese dato. |
+| Audio | El perfil tiene ajuste de sonido pero el audio sigue sin definir. |
+| Valores en dp (mobile) | Propuestos, a validar en dispositivo real. Dock de 112 o 96 dp sin decidir. |
+| Desenfoque del dock | Costo de rendimiento sin medir. |
+| Textos del prototipo | Voseo o tuteo y redacción final: los revisa la persona responsable. |

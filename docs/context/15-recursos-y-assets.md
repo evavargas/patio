@@ -16,7 +16,7 @@ Sin definir qué audio hay (música, efectos, lectura de la consigna). Decisión
 
 ## Fuentes tipográficas
 
-Autoalojadas, sin CDN. Familia de lectura clara por elegir (candidatas: Atkinson Hyperlegible, Lexend). Confirmar licencia OFL antes de incluir. Subconjunto de caracteres para español (incluye ñ, tildes, ¿ ¡) y `font-display: swap`.
+Autoalojadas, sin CDN. Familia del prototipo: Lexend (propuesta; Atkinson Hyperlegible queda como alternativa). Confirmar licencia OFL antes de incluir. La librería de i18n también registra licencia y telemetría (pendiente). Subconjunto de caracteres para español (incluye ñ, tildes, ¿ ¡) y `font-display: swap`.
 
 ## Íconos
 

@@ -29,7 +29,7 @@ No hay dominio propio: panel, juego y API quedan en dominios compartidos (`pages
 
 ## Variables y secretos
 
-Back: `MONGODB_URI`, `JWT_SECRET`, `RECOVERY_HMAC_SECRET`, `CORS_ORIGINS`, zona horaria por defecto. Front: `VITE_API_URL`, `VITE_DEFAULT_THEME`. Nunca en el repo; `.env*` está en `.gitignore` y denegado en los permisos de Claude Code. Secretos del respaldo en secretos del repo de GitHub.
+Back: `MONGODB_URI`, `JWT_SECRET`, `RECOVERY_HMAC_SECRET`, `CORS_ORIGINS`, zona horaria por defecto, cuenta y contraseña de aplicación de Gmail SMTP (nombres por definir; el límite diario de envíos de Gmail está a verificar). Front: `VITE_API_URL`, `VITE_DEFAULT_THEME`. Nunca en el repo; `.env*` está en `.gitignore` y denegado en los permisos de Claude Code. Secretos del respaldo en secretos del repo de GitHub.
 
 ## CI (GitHub Actions)
 

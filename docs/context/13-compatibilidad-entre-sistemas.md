@@ -12,7 +12,7 @@ Qué debe seguir siendo cierto entre piezas para que nada se rompa. Cada fila es
 | GitHub Actions | MongoDB Atlas | `mongodump` con cuenta de solo lectura | n/a |
 | `apps/realtime` (V2) | `apps/api` / Mongo | por definir | por definir |
 
-No hay otro tráfico saliente. En particular: nada a analítica, CDN de fuentes, mapas, fuentes de tipografía ni servicios de terceros.
+Única excepción en el MVP: `apps/api` envía por Gmail SMTP el correo de invitación a moderators. No hay otro tráfico saliente. En particular: nada a analítica, CDN de fuentes, mapas, fuentes de tipografía ni servicios de terceros.
 
 ## Compatibilidad hacia atrás
 

@@ -2,6 +2,10 @@
 
 Stack: React + TypeScript + Vite, three.js con React Three Fiber, Rapier (`@react-three/rapier`), Zustand, Tailwind (decidido), Capacitor. Un solo código para web y móvil. Capacitor empaqueta los archivos compilados dentro de la app: NO se descarga código en tiempo de ejecución (Apple 2.5.2). Los desafíos son datos, no código.
 
+## Diseño de referencia (Stitch)
+
+Proyecto Stitch "Patio Educational Game UI Kit", ID `13384218339571647708` (https://stitch.google.com/projects/13384218339571647708). Es referencia visual, no implementación: colores, tamaños y radios salen de tokens del tema. Antes de usar una pantalla, pasarla por `wellbeing-check` (por ejemplo "Fin de jornada" y "Código secreto").
+
 ## Capas
 
 Dos capas superpuestas: canvas 3D (R3F) debajo, interfaz React (HUD, desafíos, pantallas) encima. Pantallas con una máquina de estados simple, sin librería de rutas.
@@ -17,7 +21,7 @@ Arranque (sesión guardada, palabras prohibidas, día) -> Términos (primera ape
 - Zustand: sesión, pantalla, día, puntaje, juguetes logrados. Se lee sin re-renderizar.
 - Sin TanStack Query en el juego: pocos endpoints y cola de reintentos de logros propia.
 - Sesión (ID, token, código de recuperación, apodo) en `localStorage` (web) o plugin Preferences de Capacitor (móvil), tras una abstracción de almacenamiento única. Evaluar almacenamiento seguro más adelante (pendiente).
-- Textos en un catálogo propio, español base `es-UY`, sin librería de i18n en el MVP. Ninguna cadena escrita dentro de un componente.
+- Textos con i18n (librería por elegir), español base `es-UY`, selector de idioma en el perfil. Ninguna cadena escrita dentro de un componente.
 
 ## Escena 3D
 
@@ -57,3 +61,7 @@ Plugins mínimos: Preferences, App (pausa y reanudación), StatusBar (a confirma
 ## Prueba de rendimiento (primera tarea de código)
 
 Ver skill `perf-gate-3d`. Modo `?perf=1`, guion de 60 s, registra fps promedio y peor 1 %, tiempo de cuadro, draw calls, triángulos, memoria y tiempo hasta poder jugar; resumen en pantalla y JSON exportable; se mide en cada dispositivo de prueba, en navegador y en el WebView. Criterio propuesto: 30 fps sostenidos en el dispositivo más modesto con el peor 1 % no menor a 20 (a fijar con los dispositivos reales; faltan marca, versión de Android y memoria).
+
+## Prototipo visual
+
+Pantallas, patrones (Message Dock) y referencia mobile en `docs/design/prototipo-pantallas.md`. Lo decidido y lo propuesto están separados allí.

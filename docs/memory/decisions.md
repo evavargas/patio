@@ -2,6 +2,22 @@
 
 Formato: fecha, decisión, motivo breve, dónde aplica. Lo más reciente va arriba. Estado "doc pendiente" = decidido pero el documento original de arquitectura o diseño todavía no lo refleja.
 
+## Prototipo visual (Stitch)
+
+Detalle en `docs/design/prototipo-pantallas.md`. Sin fecha a pedido de la persona responsable.
+
+- Al terminar el día el player camina libre por el patio: sin límite de tiempo forzado, sin salida forzada, juguetes apagados y sin interacción, mensaje amable de que puede seguir practicando la próxima vez, sin chip de hora. Motivo: no hay interacción nueva y forzar el cierre es contraproducente. Aplica: `09-juego-contenido-y-bienestar.md`, `05-juego-frontend.md`.
+- Salir de un desafío sin responder solo lo cierra: no cambia el estado ni los logros y se puede reabrir.
+- El perfil incluye tema, sonido, idioma y botón "ver tutorial". El juego tiene tutorial de primera vez, pantalla de carga y patio con juguetes apagados.
+- Los moderators son invitados por correo; la pantalla de registro del panel es "aceptar invitación".
+- El panel reutiliza paleta y fuente del juego (sistema de diseño "Patio Uruguayo Sunset", Lexend) en un proyecto de Stitch aparte. Los textos del prototipo son provisorios y los revisa la persona responsable.
+- La invitación por correo a moderators entra al MVP y usa Gmail SMTP. Sustituye el "después del MVP" anterior. Es la excepción a "sin correo" de `02-arquitectura-general.md`.
+- El panel muestra rankings y nivel de los players a moderators y administrators. El juego no los muestra al player. Se mantiene lo de `06-panel-frontend.md`.
+- El juego Y el panel usan i18n (librería de internacionalización) para escalar. Idiomas: español `es-UY` (por defecto) e inglés. Selector de idioma en el perfil del juego y en el menú de la cuenta del panel. Sustituye "catálogo propio sin librería de i18n" y "panel todo en español". Falta elegir la librería.
+- Gmail SMTP queda confirmado para el correo de invitación. La contraseña de aplicación de 16 caracteres va solo en `.env` (ignorado por git) y en los secretos del despliegue. `.env.example` lleva solo nombres de variables con valores vacíos, nunca el valor real.
+- La pantalla "Moderación y Actividad" del panel en Stitch se borra y no se implementa (muestra datos por player y marcas de hora que no se pidieron).
+- Los tamaños en dp de la referencia mobile y las medidas del panel son PROPUESTAS, no decisiones.
+
 ## 2026-10-06 (últimas respuestas)
 
 - El JUGADOR puede elegir entre temas (además del modo). Motivo: necesidad de personalización que no interfiere con el plan pedagógico. Aplica: `08-tema-y-accesibilidad.md`. Estado: doc pendiente (arquitectura 19.5 y pendientes decían "solo modo").

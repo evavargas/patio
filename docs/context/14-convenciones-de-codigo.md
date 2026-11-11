@@ -8,7 +8,7 @@ Estado: PROPUESTAS del harness, derivadas de las decisiones de arquitectura. No 
 | --- | --- |
 | Identificadores (variables, funciones, tipos, colecciones, rutas, valores, claves de JSON, errores) | Inglés, con los tres roles `player` / `moderator` / `administrator` |
 | Documentación, ADR, memoria del proyecto | Español, sin raya larga (em dash) |
-| Texto de interfaz (juego y panel) | Español `es-UY`, siempre desde el catálogo de textos, nunca dentro de un componente |
+| Texto de interfaz (juego y panel) | i18n en juego y panel (librería por elegir). Idiomas: `es-UY` (por defecto) e inglés. Siempre desde el catálogo de textos, nunca dentro de un componente |
 | Comentarios de código | Pocos. Español o inglés, solo para explicar el POR QUÉ. Nada de comentarios que repiten el código |
 | Commits y ramas | Inglés, Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`), alcance por paquete (`feat(api): ...`) |
 

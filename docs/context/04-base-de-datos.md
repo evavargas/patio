@@ -14,6 +14,7 @@ Una base, una colección por entidad. Límites del plan gratuito: 0,5 GB, 500 co
 | `dayAccess` | `playerId`, `date`, `daySetId`, `groupId?`, `createdAt` | único: {playerId, date}; {date, groupId} |
 | `results` | `eventId`, `playerId`, `challengeId`, `daySetId`, `date`, `groupId?`, `applied`, `durationMs`, `createdAt` | únicos: `eventId`, {playerId, daySetId, challengeId}; {date, groupId} |
 | `accounts` | `email`, `role` (`moderator`\|`administrator`), `passwordHash`, `mustChangePassword`, `active`, `createdAt`, `lastLoginAt` | único: `email` |
+| `accountInvitations` (propuesta, forma por decidir) | Token de invitación guardado como hash, `email`, `role`, `expiresAt`, `acceptedAt?`. Solo si la invitación por correo necesita un token propio; si no, se descarta. | por decidir |
 | `refreshTokens` | `accountId`, `familyId`, `tokenHash`, `expiresAt`, `rotatedAt?` | único: `tokenHash`; TTL en `expiresAt` |
 | `settings` | tres documentos: `rules` (puntos, reglas de nivel, zona horaria, tolerancia de medianoche), `limits` (límites por IP), `bannedWords` (versión y palabras) | por `_id` |
 | `dailyStats` | cierres diarios (global y por grupo) | único: {date, scope, groupId} |

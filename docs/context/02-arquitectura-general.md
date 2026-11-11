@@ -70,7 +70,7 @@ Dentro de cada módulo: controlador (HTTP + validación con el schema) -> servic
 3. El servidor es la autoridad del tiempo, de las reglas de nivel y de los permisos. El cliente evalúa el logro, el servidor valida formato e idempotencia.
 4. Los resultados son la fuente de verdad. Puntaje, conteos y nivel son contadores derivados y recalculables.
 5. Pocas operaciones por pedido: Atlas gratuito admite 100 operaciones por segundo.
-6. Sin servicios externos en el MVP: sin cola, sin correo, sin analítica. Lo único programado es el respaldo (GitHub Actions).
+6. Sin servicios externos en el MVP: sin cola, sin analítica. Única excepción: correo de invitación a moderators por Gmail SMTP. Lo único programado es el respaldo (GitHub Actions).
 7. El 3D no toca el estado de React en el bucle de dibujo.
 8. Lo que ve el jugador se renderiza SIEMPRE como texto plano, nunca HTML.
 9. La API `/v1` solo cambia agregando campos (apps instaladas no se pueden forzar a actualizar).

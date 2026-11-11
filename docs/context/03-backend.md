@@ -56,7 +56,7 @@ JSON siempre. Errores `{ code, message, details }` con códigos de dominio estab
 
 Juego (`/v1`): `GET /banned-words` (pública, con versión, cacheable), `POST /players` (pública), `POST /players/recover` (pública), `POST /players/me/group`, `GET /me`, `GET /day`, `POST /results`, `GET /healthz` (pública, no toca la base).
 
-Panel (`/v1/panel`): `POST /auth/login|refresh|logout|change-password`; `/accounts` (+ `reset-password`, DELETE); `/groups` (+ `regenerate-code`, DELETE); `/players` (GET lista y ficha, PATCH, `POST /players/move`, `PATCH /players/:id/nickname`, `POST /players/:id/reissue-recovery`, DELETE); `/challenges` (+ `duplicate`, `archive`); `/day-sets` (GET, PUT, `publish`, `unpublish`, DELETE); `/rules` (GET, PUT); `/limits` (GET, PUT); `/banned-words` (GET, PUT; cada cambio sube la versión); `/stats/overview|challenges|registrations|groups|rankings`.
+Panel (`/v1/panel`): `POST /auth/login|refresh|logout|change-password`; `/accounts` (+ `reset-password`, DELETE; propuesta: invitación por correo y aceptación, forma por decidir); `/groups` (+ `regenerate-code`, DELETE); `/players` (GET lista y ficha, PATCH, `POST /players/move`, `PATCH /players/:id/nickname`, `POST /players/:id/reissue-recovery`, DELETE); `/challenges` (+ `duplicate`, `archive`); `/day-sets` (GET, PUT, `publish`, `unpublish`, DELETE); `/rules` (GET, PUT); `/limits` (GET, PUT); `/banned-words` (GET, PUT; cada cambio sube la versión); `/stats/overview|challenges|registrations|groups|rankings`.
 
 ## Métricas: cierre diario perezoso
 
@@ -75,7 +75,7 @@ Cantidad y ventana son configurables por el administrador (`settings.limits`), c
 
 ## Configuración, errores y observabilidad
 
-- Variables de entorno: `MONGODB_URI`, `JWT_SECRET`, `RECOVERY_HMAC_SECRET`, `CORS_ORIGINS`, zona horaria por defecto. Nunca en el repo.
+- Variables de entorno: `MONGODB_URI`, `JWT_SECRET`, `RECOVERY_HMAC_SECRET`, `CORS_ORIGINS`, zona horaria por defecto, y las credenciales de Gmail SMTP para el correo de invitación (nombres por definir). Nunca en el repo.
 - CORS: lista exacta, sin comodín. Permitir `Authorization` y `Content-Type`. `OPTIONS` responde sin tocar la base y con `Access-Control-Max-Age`.
 - Logs JSON a stdout con ID de pedido, ruta, estado, duración y `playerId` o `accountId`. NUNCA apodos, tokens ni códigos.
 - `/healthz` no toca la base.

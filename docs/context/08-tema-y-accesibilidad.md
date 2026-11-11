@@ -68,4 +68,4 @@ Aplica al juego Y al panel. Los dos comparten formato de tema y nombres de token
 
 ## Pendiente
 
-Paleta, tipografía y temas finales sin definir (el tema por defecto parte de una paleta provisional). Fuentes candidatas: Atkinson Hyperlegible, Lexend. Confirmar licencia (OFL) antes de incluirlas.
+Paleta y tipografía del prototipo: "Patio Uruguayo Sunset" con Lexend (`docs/design/stitch/DESIGN-patio-uruguayo-sunset.md`), propuesta hasta pasarla a tokens de `packages/theme`. Confirmar licencia (OFL) de Lexend antes de incluirla. Con i18n, `<html lang>` sigue el idioma elegido en el perfil (`es-UY` por defecto).

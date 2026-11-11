@@ -4,7 +4,7 @@ Los jugadores son niños de 6 a 11 años: la privacidad es un requisito de produ
 
 ## Datos
 
-Se guarda: ID aleatorio y fecha de registro, apodo (moderado), grupo actual e historial, hash del token, HMAC del código de recuperación, aceptación de términos (versión y fecha), acceso al set del día, logros, puntaje, conteos y nivel, y cuentas del panel (correo, rol, hash de contraseña; son adultos).
+Se guarda: ID aleatorio y fecha de registro, apodo (moderado), grupo actual e historial, hash del token, HMAC del código de recuperación, aceptación de términos (versión y fecha), acceso al set del día, logros, puntaje, conteos y nivel, y cuentas del panel (correo, rol, hash de contraseña; son adultos). El correo de un moderator sale hacia Gmail al invitarlo; al player nunca se le envía correo ni se le pide.
 
 NO se recolecta: nombre real, email o fecha de nacimiento de niños, ubicación, identificadores publicitarios, analítica de terceros, texto libre salvo el apodo, intentos, errores ni abandonos.
 
