@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "player.schema.json",
+  "$defs": {
+    "RegisterPlayerRequest": {
+      "title": "RegisterPlayerRequest",
+      "description": "Cuerpo de POST /v1/players (publico). `nickname`: maximo 20 caracteres, lo valida el servidor contra la lista de palabras (NICKNAME_NOT_ALLOWED); el tope de 64 del schema solo acota el cuerpo. `termsVersion`: version de los terminos que el player acepto; el servidor guarda version y fecha. Los servidores toleran campos nuevos.",
+      "type": "object",
+      "required": ["nickname", "termsVersion"],
+      "properties": {
+        "nickname": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "groupCode": { "$ref": "primitives.schema.json#/$defs/GroupCode" },
+        "termsVersion": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,32}$" }
+      }
+    },
+    "RegisterPlayerResponse": {
+      "title": "RegisterPlayerResponse",
+      "description": "Respuesta de POST /v1/players (201). `token` y `recoveryCode` solo existen en claro en esta respuesta. Sin nivel. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": ["playerId", "token", "recoveryCode"],
+      "properties": {
+        "playerId": { "$ref": "primitives.schema.json#/$defs/PlayerId" },
+        "token": { "$ref": "primitives.schema.json#/$defs/PlayerToken" },
+        "recoveryCode": { "$ref": "primitives.schema.json#/$defs/RecoveryCode" }
+      }
+    }
+  }
+}

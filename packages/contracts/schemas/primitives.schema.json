@@ -22,6 +22,24 @@
       "pattern": "^[A-HJ-KM-NP-Z2-9]{12}$",
       "tsType": "string & { readonly __brand: 'PlayerId' }"
     },
+    "GroupCode": {
+      "title": "GroupCode",
+      "description": "Codigo de grupo: 6 caracteres del alfabeto de 31 simbolos.",
+      "type": "string",
+      "pattern": "^[A-HJ-KM-NP-Z2-9]{6}$"
+    },
+    "RecoveryCode": {
+      "title": "RecoveryCode",
+      "description": "Codigo de recuperacion: 8 caracteres del alfabeto de 31 simbolos. Funciona como contrasena del player.",
+      "type": "string",
+      "pattern": "^[A-HJ-KM-NP-Z2-9]{8}$"
+    },
+    "PlayerToken": {
+      "title": "PlayerToken",
+      "description": "Token secreto del player: 32 bytes aleatorios en base64url (43 caracteres). Viaja en Authorization: Bearer.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
     "GroupId": {
       "title": "GroupId",
       "type": "string",

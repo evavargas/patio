@@ -5,14 +5,15 @@ import dragDrop from "../schemas/drag-drop.schema.json" with { type: "json" };
 import error from "../schemas/error.schema.json" with { type: "json" };
 import health from "../schemas/health.schema.json" with { type: "json" };
 import mechanic from "../schemas/mechanic.schema.json" with { type: "json" };
+import player from "../schemas/player.schema.json" with { type: "json" };
 import numberInput from "../schemas/number-input.schema.json" with { type: "json" };
 import primitives from "../schemas/primitives.schema.json" with { type: "json" };
 import wordDrop from "../schemas/word-drop.schema.json" with { type: "json" };
-import type { BannedWordsResponse, Challenge, DayKey, ErrorBody, HealthResponse, IsoDateTime, PlayerId } from "./generated/types.ts";
+import type { BannedWordsResponse, Challenge, DayKey, ErrorBody, HealthResponse, IsoDateTime, PlayerId, RegisterPlayerRequest, RegisterPlayerResponse } from "./generated/types.ts";
 
 const ajv = new Ajv2020({ strict: true });
 ajv.addKeyword("tsType"); // solo lo lee el generador de tipos
-for (const s of [primitives, error, health, bannedWords, dragDrop, numberInput, wordDrop, mechanic, challenge]) {
+for (const s of [primitives, error, health, bannedWords, player, dragDrop, numberInput, wordDrop, mechanic, challenge]) {
   ajv.addSchema(s);
 }
 
@@ -32,3 +33,5 @@ export const isHealthResponse = compile<HealthResponse>("health.schema.json#/$de
 
 /** Catalogo de codigos de dominio, leido del schema (misma fuente que el tipo ErrorCode). */
 export const ERROR_CODES: readonly string[] = error.$defs.ErrorCode.enum;
+export const isRegisterPlayerRequest = compile<RegisterPlayerRequest>("player.schema.json#/$defs/RegisterPlayerRequest");
+export const isRegisterPlayerResponse = compile<RegisterPlayerResponse>("player.schema.json#/$defs/RegisterPlayerResponse");

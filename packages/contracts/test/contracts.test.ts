@@ -10,6 +10,8 @@ import {
   isHealthResponse,
   isIsoDateTime,
   isPlayerId,
+  isRegisterPlayerRequest,
+  isRegisterPlayerResponse,
 } from "../src/index.ts";
 
 const dir = (kind: "valid" | "invalid"): string[] =>
@@ -108,5 +110,45 @@ describe("banned-words", () => {
     expect(isBannedWordsResponse({ version: 1.5, words: [] })).toBe(false);
     expect(isBannedWordsResponse({ words: [] })).toBe(false);
     expect(isBannedWordsResponse({ version: 1, words: [], extra: 1 })).toBe(true);
+  });
+});
+
+describe("registro de player", () => {
+  const ex = (kind: "requests" | "responses", f: string): unknown =>
+    JSON.parse(readFileSync(join(import.meta.dirname, "../examples", kind, f), "utf8"));
+  const files = (kind: "requests" | "responses", ext: string): string[] =>
+    readdirSync(join(import.meta.dirname, "../examples", kind)).filter((f) => f.endsWith(ext)).sort();
+
+  it.each(files("requests", ".valid.json"))("pedido: acepta %s", (f) => {
+    expect(isRegisterPlayerRequest(ex("requests", f))).toBe(true);
+  });
+  it.each(files("requests", ".invalid.json"))("pedido: rechaza %s", (f) => {
+    expect(isRegisterPlayerRequest(ex("requests", f))).toBe(false);
+  });
+  it("pedido: tolera campos nuevos (/v1 solo crece)", () => {
+    expect(isRegisterPlayerRequest({ nickname: "Sol", termsVersion: "1", extra: true })).toBe(true);
+  });
+  it("pedido: el apodo se acota a 64 en el schema (el limite de 20 lo aplica el servidor)", () => {
+    expect(isRegisterPlayerRequest({ nickname: "a".repeat(64), termsVersion: "1" })).toBe(true);
+    expect(isRegisterPlayerRequest({ nickname: "a".repeat(65), termsVersion: "1" })).toBe(false);
+  });
+  it("respuesta: acepta el ejemplo y rechaza token corto, codigo de 7 y sin campos", () => {
+    expect(isRegisterPlayerResponse(ex("responses", "register-player.valid.json"))).toBe(true);
+    expect(isRegisterPlayerResponse(ex("responses", "register-player.invalid.json"))).toBe(false);
+    const ok = { playerId: "ABCDEFGH2345", token: "a".repeat(43), recoveryCode: "K7QM2XPT" };
+    expect(isRegisterPlayerResponse(ok)).toBe(true);
+    expect(isRegisterPlayerResponse({ ...ok, recoveryCode: "K7QM2XP" })).toBe(false);
+    expect(isRegisterPlayerResponse({ playerId: ok.playerId })).toBe(false);
+  });
+  it("respuesta: el ejemplo no trae nivel ni hashes", () => {
+    expect(Object.keys(JSON.parse(readFileSync(join(import.meta.dirname, "../examples/responses/register-player.valid.json"), "utf8"))).sort()).toEqual(["playerId", "recoveryCode", "token"]);
+  });
+  it("GroupCode y RecoveryCode usan el mismo alfabeto de 31 simbolos que PlayerId", () => {
+    const sym = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    expect(sym).toHaveLength(31);
+    expect(isRegisterPlayerRequest({ nickname: "a", termsVersion: "1", groupCode: sym.slice(0, 6) })).toBe(true);
+    for (const bad of ["0", "O", "1", "I", "L"]) {
+      expect(isRegisterPlayerRequest({ nickname: "a", termsVersion: "1", groupCode: `ABCDE${bad}` })).toBe(false);
+    }
   });
 });

@@ -36,6 +36,27 @@ export type IsoDateTime = string;
  */
 export type PlayerId = string & {readonly __brand: "PlayerId"};
 /**
+ * Codigo de grupo: 6 caracteres del alfabeto de 31 simbolos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "GroupCode".
+ */
+export type GroupCode = string;
+/**
+ * Codigo de recuperacion: 8 caracteres del alfabeto de 31 simbolos. Funciona como contrasena del player.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "RecoveryCode".
+ */
+export type RecoveryCode = string;
+/**
+ * Token secreto del player: 32 bytes aleatorios en base64url (43 caracteres). Viaja en Authorization: Bearer.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PlayerToken".
+ */
+export type PlayerToken = string;
+/**
  * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
  * via the `definition` "GroupId".
  */
@@ -211,6 +232,28 @@ export interface ErrorBody {
 export interface BannedWordsResponse {
   version: number;
   words: string[];
+}
+/**
+ * Cuerpo de POST /v1/players (publico). `nickname`: maximo 20 caracteres, lo valida el servidor contra la lista de palabras (NICKNAME_NOT_ALLOWED); el tope de 64 del schema solo acota el cuerpo. `termsVersion`: version de los terminos que el player acepto; el servidor guarda version y fecha. Los servidores toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "RegisterPlayerRequest".
+ */
+export interface RegisterPlayerRequest {
+  nickname: string;
+  groupCode?: GroupCode;
+  termsVersion: string;
+}
+/**
+ * Respuesta de POST /v1/players (201). `token` y `recoveryCode` solo existen en claro en esta respuesta. Sin nivel. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "RegisterPlayerResponse".
+ */
+export interface RegisterPlayerResponse {
+  playerId: PlayerId;
+  token: PlayerToken;
+  recoveryCode: RecoveryCode;
 }
 /**
  * Respuesta de GET /v1/healthz. No toca la base. Los clientes toleran campos nuevos.

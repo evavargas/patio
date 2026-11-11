@@ -7,6 +7,9 @@
     "DayKey": { "$ref": "primitives.schema.json#/$defs/DayKey" },
     "IsoDateTime": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
     "PlayerId": { "$ref": "primitives.schema.json#/$defs/PlayerId" },
+    "GroupCode": { "$ref": "primitives.schema.json#/$defs/GroupCode" },
+    "RecoveryCode": { "$ref": "primitives.schema.json#/$defs/RecoveryCode" },
+    "PlayerToken": { "$ref": "primitives.schema.json#/$defs/PlayerToken" },
     "GroupId": { "$ref": "primitives.schema.json#/$defs/GroupId" },
     "ChallengeId": { "$ref": "primitives.schema.json#/$defs/ChallengeId" },
     "DaySetId": { "$ref": "primitives.schema.json#/$defs/DaySetId" },
@@ -14,6 +17,8 @@
     "ErrorCode": { "$ref": "error.schema.json#/$defs/ErrorCode" },
     "ErrorBody": { "$ref": "error.schema.json#/$defs/ErrorBody" },
     "BannedWordsResponse": { "$ref": "banned-words.schema.json#/$defs/BannedWordsResponse" },
+    "RegisterPlayerRequest": { "$ref": "player.schema.json#/$defs/RegisterPlayerRequest" },
+    "RegisterPlayerResponse": { "$ref": "player.schema.json#/$defs/RegisterPlayerResponse" },
     "HealthResponse": { "$ref": "health.schema.json#/$defs/HealthResponse" }
   }
 }
