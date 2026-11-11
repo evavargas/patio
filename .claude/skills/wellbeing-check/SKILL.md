@@ -1,6 +1,6 @@
 ---
 name: wellbeing-check
-description: Revisar una función, pantalla, texto o flujo que vea el jugador (6 a 10 años) contra los principios de bienestar y el diseño anti adicción de Patio, antes de implementarlo o darlo por terminado.
+description: Revisar una función, pantalla, texto o flujo que vea el jugador (6 a 11 años) contra los principios de bienestar y el diseño anti adicción de Patio, antes de implementarlo o darlo por terminado.
 argument-hint: "<función, pantalla o texto>"
 ---
 
@@ -23,7 +23,7 @@ Prohibido (¿lo introduce?):
 Cuidado de diseño:
 9. ¿El cierre del día sigue siendo explícito ("Terminaste tu recreo") y no prolonga la sesión?
 10. ¿El mensaje de no logrado invita a probar otra estrategia, sin dar la respuesta?
-11. ¿El texto es breve, claro para 6 a 10 años, sin lenguaje técnico?
+11. ¿El texto es breve, claro para 6 a 11 años, sin lenguaje técnico?
 12. ¿Una sola acción principal por pantalla y blancos táctiles de 48 dp?
 13. ¿Se entiende sin leer mucho (ícono más texto, audio opcional)?
 14. ¿Evita pedir o mostrar datos personales, chat, contenido de otros usuarios o enlaces externos?
