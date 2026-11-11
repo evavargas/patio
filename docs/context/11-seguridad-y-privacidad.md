@@ -1,6 +1,6 @@
 # Seguridad y privacidad
 
-Los jugadores son niños de 6 a 10 años: la privacidad es un requisito de producto, no una mejora.
+Los jugadores son niños de 6 a 11 años: la privacidad es un requisito de producto, no una mejora.
 
 ## Datos
 

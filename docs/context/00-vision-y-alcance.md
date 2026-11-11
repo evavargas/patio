@@ -4,7 +4,7 @@ Fuente: documento de diseño del sistema (`documentation/Patio_diseno_sistema_mv
 
 ## Qué es Patio
 
-Juego 3D para web y móviles, para niños de 6 a 10 años (caso de uso Uruguay, proyección LATAM). El jugador es un extraterrestre que explora el patio de una escuela. Los juguetes que encuentra esconden desafíos interactivos definidos por un moderador desde un panel web. Entre 3 y 5 por día como referencia, a criterio del moderador. El día termina de forma explícita. El jugador acumula puntaje y el moderador sigue su evolución.
+Juego 3D para web y móviles, para niños de 6 a 11 años (caso de uso Uruguay, proyección LATAM). El jugador es un extraterrestre que explora el patio de una escuela. Los juguetes que encuentra esconden desafíos interactivos definidos por un moderador desde un panel web. Entre 3 y 5 por día como referencia, a criterio del moderador. El día termina de forma explícita. El jugador acumula puntaje y el moderador sigue su evolución.
 
 Eslogan: "Un recreo para pensar."
 
@@ -16,7 +16,7 @@ Evidenciar que el niño puede comprender y resolver mejor ciertos tipos de probl
 
 | Tema | Decisión |
 | --- | --- |
-| Público | 6 a 10 años, sin separación por edad. Todos empiezan en nivel 0. |
+| Público | 6 a 11 años, sin separación por edad. Todos empiezan en nivel 0. |
 | Plataforma | Web y móviles con un solo código. Android primero, iOS al final. Requiere conexión: no hay modo offline. |
 | Escenario | Patio de escuela 3D al atardecer. Movimiento libre, salto y cámara en tercera persona. La escuela se ve pero no se entra. |
 | Juguetes | Uno por desafío, posición e imagen aleatorias (semilla: hash de playerId + fecha). El moderador no define posiciones ni imágenes. |
