@@ -95,6 +95,16 @@ Detalle en `docs/design/prototipo-pantallas.md`. Sin fecha a pedido de la person
 - Límites: `import-x/no-cycle` y `import-x/no-restricted-paths` (paquetes no importan de apps, entre apps no hay imports, mapa de módulos del back del doc 02 con `platform` como transversal, supuesto mío). Al agregar un módulo del back se edita `API_MODULE_DEPS` en `eslint.config.js`. La prueba de límites vive en `tools/` (paquete `@patio/tools`, solo pruebas).
 - `Clock` del back gana `monotonicMs()` para medir duraciones (antes `app.ts` llamaba a `performance.now()`). Dos desactivaciones justificadas en una línea: el `as DayKey` de `Clock.today()` y el `tabIndex` de la región con scroll de `PerfPanel`.
 
+## 2026-11-11 (recuperar y GET /v1/me)
+
+- Recuperar, guard del player y `GET /v1/me` viven en `players` (doc 02: "recuperación ... y guard por token del jugador"). No toca grupo, así que no va en `membership`. `players` pasa a usar `rate-limit` (transversal); `API_MODULE_DEPS` no cambia.
+- Contrato: `RecoverPlayerResponse` { playerId, token, nickname } (lo mínimo para volver a armar la sesión de doc 05: ID, token, apodo; el código ya lo tiene el cliente). `MeResponse` { nickname, score }: doc 05 pone en el perfil apodo y puntaje; los juguetes logrados llegan con `GET /day`. Sin grupo ni nivel. Propuesta mía, aditivo después.
+- Códigos de error y estados (propuesta): `RECOVERY_CODE_INVALID` 404; `INVALID_TOKEN` 401 (doc 05: un 401 lleva a Recuperar).
+- Límite de recuperación: 100 por hora por IP (valor de doc 03, sin medir), `RATE_LIMIT_RECOVER_MAX|WINDOW_SECONDS`. Cuenta todo pedido. No se agrega límite por código de entrada: doc 03 no lo menciona, y permitiría a un tercero bloquear el código ajeno.
+- Un solo update atómico por HMAC cambia el hash del token (no hay estado intermedio con dos tokens válidos). No se actualiza `lastActiveAt` (lo hace `GET /day`).
+- Guard: busca por SHA-256 del token y además compara en tiempo constante (`timingSafeEqual`). La comparación extra es defensa en profundidad: el índice ya busca por hash.
+- Respuestas de recuperar y de `/me`: `Cache-Control: private, no-store`.
+
 ## Decisiones anteriores (resumen)
 
 - Sin modo offline. Sin consentimiento parental: solo casilla de términos. ID aleatorio generado por la app, apodo libre con filtro, guardado en el servidor.

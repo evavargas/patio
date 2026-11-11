@@ -32,6 +32,7 @@ Reglas de modelado:
 Usos reales hasta ahora:
 
 - `POST /v1/players` escribe `players` (con `countsByDifficulty` y `countsByFamily` vacíos, `level: 0`, `termsVersion` y `termsAcceptedAt`; `groupId` es `null` sin grupo), `groupMemberships` (solo con grupo, sin `leftAt`) y `rateLimits`; lee `groups` y `settings`. `groups._id` es un string opaco (la creación de grupos llega con el panel; las pruebas insertan fixtures).
+- `POST /v1/players/recover` escribe `players.tokenHash` (un solo `findOneAndUpdate` por `recoveryHash`) y `rateLimits`. `GET /v1/me` y el guard de player solo leen `players` por `tokenHash` (proyección: `nickname`, `score`, `tokenHash`).
 - Los índices de `players`, `groups`, `groupMemberships` y `rateLimits` se crean al arrancar (`createIndexes`, idempotente) desde el `onModuleInit` de cada repositorio. Las demás colecciones los crean cuando se usen.
 - Cupo del grupo = `countDocuments` sobre `players.groupId` (no sobre `groupMemberships`), para que una fila huérfana no ocupe un lugar.
 - Un choque de índice único de `tokenHash` o `recoveryHash` al insertar (probabilidad ínfima) responde 500 y el pedido se deshace; el cliente reintenta con identidad nueva.

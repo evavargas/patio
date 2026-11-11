@@ -98,4 +98,5 @@ Apodos duplicados dentro de un grupo, límite de frecuencia de gestos, silenciar
 | Cupo estricto del grupo | Con insertar y volver a contar no se supera `maxSize`, pero una carrera por el último lugar puede rechazar a todos los que compiten. Un contador atómico en `groups` lo evitaría, a costa de mantenerlo en mover y borrar. Decidir si hace falta. |
 | IP en `rateLimits` | La IP queda en texto en la clave durante la ventana. Evaluar guardar un hash. |
 | Caché de la lista de palabras | El registro hace 1 lectura de `settings` por pedido. Sin medir; cachear en memoria si pesa. |
+| Recuperar y perfil | Estado `RECOVERY_CODE_INVALID` (404) e `INVALID_TOKEN` (401) son propuesta. Límite de recuperación 100/hora por IP sin medir: un colegio entero detrás de una IP comparte el cupo. `MeResponse` no incluye grupo ni juguetes logrados (doc no los pide; confirmar con el juego). El cliente debe normalizar el código a mayúsculas antes de enviar. Falta decidir si recuperar debe actualizar `lastActiveAt`. |
 | Código de grupo en minúsculas | El contrato exige mayúsculas; el cliente debe normalizar antes de enviar. |
