@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const ROOT = join(import.meta.dirname, "..");
 // no-restricted-paths solo evalua imports que resuelven a un archivo real: se crean archivos de mentira
 // (`y.ts`). Se borra SOLO lo creado aca: nunca un directorio de modulo real.
-const FIXTURE_FILES = ["groups", "players", "database", "word-filter"].map((m) => join(ROOT, "apps/api/src", m, "y.ts"));
+const FIXTURE_FILES = ["groups", "players", "database", "word-filter", "auth", "membership", "rate-limit"].map((m) => join(ROOT, "apps/api/src", m, "y.ts"));
 const createdDirs: string[] = [];
 
 beforeAll(() => {
@@ -52,6 +52,30 @@ describe("reglas de lint del repo", () => {
     expect(ok).not.toContain("import-x/no-restricted-paths");
     const bad = await rulesFor("apps/api/src/database/x.ts", 'import "../word-filter/y.ts";\n');
     expect(bad).toContain("import-x/no-restricted-paths");
+  });
+
+  it("membership puede usar players y groups; players y groups no pueden usar membership ni entre si", async () => {
+    expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../players/y.ts";\nimport "../groups/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/players/x.ts", 'import "../membership/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/groups/x.ts", 'import "../membership/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/players/x.ts", 'import "../groups/y.ts";\n')).toContain("import-x/no-restricted-paths");
+  });
+
+  it("membership no salta a auth ni a word-filter (solo a players y groups)", async () => {
+    expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../auth/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../word-filter/y.ts";\n')).toContain("import-x/no-restricted-paths");
+  });
+
+  it("players usa auth y word-filter; auth no usa a nadie ni toca la base", async () => {
+    expect(await rulesFor("apps/api/src/players/x.ts", 'import "../auth/y.ts";\nimport "../word-filter/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/auth/x.ts", 'import "../players/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/auth/x.ts", 'import "../database/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/auth/x.ts", 'import "../rate-limit/y.ts";\n')).toContain("import-x/no-restricted-paths");
+  });
+
+  it("rate-limit es transversal pero no puede importar de modulos de negocio", async () => {
+    expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../rate-limit/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/rate-limit/x.ts", 'import "../players/y.ts";\n')).toContain("import-x/no-restricted-paths");
   });
 
   it("any, enum, as, Date.now, new Date y performance.now fallan fuera del reloj", async () => {

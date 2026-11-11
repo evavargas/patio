@@ -16,6 +16,8 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
   const logger = app.get(JsonLogger);
   const clock = app.get(Clock);
   app.disable("x-powered-by");
+  // Sin proxies de confianza (0) req.ip es la direccion del socket y X-Forwarded-For se ignora.
+  app.set("trust proxy", config.trustProxyHops);
   app.enableCors({
     origin: config.corsOrigins,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],

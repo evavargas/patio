@@ -9,6 +9,8 @@ export interface TestDatabase {
   db: Db;
   /** `settings` con `_id` string, como la usa el codigo real. */
   settings: Collection<Document & { _id: string }>;
+  /** Coleccion con `_id` string (jugadores y grupos). */
+  withStringIds(name: string): Collection<Document & { _id: string }>;
   /** Borra la base de pruebas y cierra la conexion. */
   drop(): Promise<void>;
 }
@@ -33,6 +35,7 @@ export async function openTestDatabase(): Promise<TestDatabase> {
     dbName,
     db,
     settings: db.collection<Document & { _id: string }>("settings"),
+    withStringIds: (name) => db.collection<Document & { _id: string }>(name),
     drop: async () => {
       await db.dropDatabase();
       await client.close();

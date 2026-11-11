@@ -3,10 +3,12 @@ import { DatabaseModule } from "../database/database.module.ts";
 import { BannedWordsController } from "./banned-words.controller.ts";
 import { BannedWordsRepository } from "./banned-words.repository.ts";
 import { BannedWordsService } from "./banned-words.service.ts";
+import { NicknameService } from "./nickname.service.ts";
 
 @Module({
   imports: [DatabaseModule],
   controllers: [BannedWordsController],
-  providers: [BannedWordsService, BannedWordsRepository],
+  providers: [BannedWordsService, BannedWordsRepository, NicknameService],
+  exports: [NicknameService],
 })
 export class WordFilterModule {}

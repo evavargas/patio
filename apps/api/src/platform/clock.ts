@@ -13,6 +13,11 @@ export class Clock {
     return performance.now();
   }
 
+  /** Instante `seconds` despues de `from`. */
+  addSeconds(from: Date, seconds: number): Date {
+    return new Date(from.getTime() + seconds * 1000);
+  }
+
   /** Dia calendario en la zona configurada. */
   today(): DayKey {
     // en-CA formatea YYYY-MM-DD

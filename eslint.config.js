@@ -18,12 +18,15 @@ export const API_MODULE_DEPS = {
   rules: [],
   "word-filter": [],
   database: [],
+  "rate-limit": [],
   stats: ["results", "groups", "players"],
   accounts: ["auth"],
   platform: [],
 };
 
-const TRANSVERSAL = ["platform", "database"];
+// `rate-limit` es transversal como `platform` (doc 02 lo ubica en platform): vive aparte porque necesita MongoDB y
+// `platform` no puede importar de `database` sin ciclo. Lo usan registro, recuperacion y login.
+const TRANSVERSAL = ["platform", "database", "rate-limit"];
 
 export function apiBoundaryZones(deps = API_MODULE_DEPS) {
   const names = Object.keys(deps);
@@ -90,6 +93,9 @@ export default tseslint.config(
             { target: "./packages/**", from: "./apps/**", message: "Los paquetes no importan de apps." },
             { target: "./apps/game/**", from: "./apps/api/**", message: "Entre apps no hay imports." },
             { target: "./apps/api/**", from: "./apps/game/**", message: "Entre apps no hay imports." },
+            // doc 02: `auth` es puro, sin base de datos
+            { target: "./apps/api/src/auth/**", from: "./apps/api/src/database/**", message: "auth no toca la base de datos (doc 02)." },
+            { target: "./apps/api/src/auth/**", from: "./apps/api/src/rate-limit/**", message: "auth no toca la base de datos (doc 02)." },
             ...apiBoundaryZones(),
           ],
         },
