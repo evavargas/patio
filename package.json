@@ -1,0 +1,31 @@
+{
+  "name": "patio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@12.10.1",
+  "engines": {
+    "node": "24.18.0"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @patio/api dev",
+    "dev:game": "pnpm --filter @patio/game dev",
+    "db:up": "docker compose up -d --wait mongo",
+    "db:down": "docker compose down",
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm -r build",
+    "contracts:generate": "pnpm --filter @patio/contracts generate",
+    "test": "pnpm -r test",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-import-x": "4.18.1",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2"
+  }
+}
