@@ -1,0 +1,24 @@
+# MongoDB LOCAL para desarrollo y pruebas. Atlas M0 es solo para despliegue.
+# Sin autenticacion: solo es seguro porque el puerto queda atado a 127.0.0.1.
+# No pongas datos reales aca. Version 8.0 de la linea que ofrece Atlas M0 (verificar antes de desplegar).
+name: patio
+
+services:
+  mongo:
+    image: mongo:8.0.34
+    container_name: patio-mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - patio-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  patio-mongo-data:
+    name: patio-mongo-data
