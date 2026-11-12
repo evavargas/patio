@@ -6,13 +6,13 @@ Una base, una colección por entidad. Límites del plan gratuito: 0,5 GB, 500 co
 
 | Colección | Contenido | Índices |
 | --- | --- | --- |
-| `players` | `_id` = ID público (12 car.), `nickname`, `groupId` actual, `tokenHash`, `recoveryHash`, `score`, conteos por dificultad y familia, `level`, términos aceptados, `createdAt`, `lastActiveAt` | únicos: `tokenHash`, `recoveryHash`; {groupId, createdAt}; {createdAt} |
+| `players` | `_id` = ID público (12 car.), `nickname`, `groupId` actual, `tokenHash`, `recoveryHash`, `score`, conteos por dificultad, por familia y por dificultad y familia (`countsByDifficultyFamily`, claves `"3:crear"`, propuesta), `level`, términos aceptados, `createdAt`, `lastActiveAt` | únicos: `tokenHash`, `recoveryHash`; {groupId, createdAt}; {createdAt} |
 | `groups` | `name`, `code`, `ownerIds[]`, `maxSize`, `active`, `createdAt` | único: `code`; {ownerIds} |
 | `groupMemberships` | `playerId`, `groupId`, `joinedAt`, `leftAt?` (historial) | {playerId, joinedAt}; {groupId, joinedAt} |
 | `challenges` | `authorId`, `status`, `version`, `text`, `mechanic {type, schemaVersion, config}`, `difficulty`, `points?`, `family?`, objetivos, `assets`, `updatedAt` | {authorId}; {status} |
 | `daySets` | `date` (AAAA-MM-DD en la zona del día), `groupId` (vacío = general), `status`, `items[]` (copia de cada desafío al publicar), `lockedAt?`, `timezone` | único: {date, groupId} |
 | `dayAccess` | `playerId`, `date`, `daySetId`, `groupId?`, `createdAt` | único: {playerId, date}; {date, groupId} |
-| `results` | `eventId`, `playerId`, `challengeId`, `daySetId`, `date`, `groupId?`, `applied`, `durationMs`, `createdAt` | únicos: `eventId`, {playerId, daySetId, challengeId}; {date, groupId} |
+| `results` | `eventId`, `playerId`, `challengeId`, `daySetId`, `date`, `groupId?`, `applied`, `claimedAt` (propuesta), `durationMs`, `points`, `difficulty`, `family?` (propuesta), `createdAt` | únicos: `eventId`, {playerId, daySetId, challengeId}; {date, groupId} |
 | `accounts` | `email`, `role` (`moderator`\|`administrator`), `passwordHash`, `mustChangePassword`, `active`, `createdAt`, `lastLoginAt` | único: `email` |
 | `accountInvitations` (propuesta, forma por decidir) | Token de invitación guardado como hash, `email`, `role`, `expiresAt`, `acceptedAt?`. Solo si la invitación por correo necesita un token propio; si no, se descarta. | por decidir |
 | `refreshTokens` | `accountId`, `familyId`, `tokenHash`, `expiresAt`, `rotatedAt?` | único: `tokenHash`; TTL en `expiresAt` |
@@ -36,6 +36,9 @@ Usos reales hasta ahora:
 - Los índices de `players`, `groups`, `groupMemberships` y `rateLimits` se crean al arrancar (`createIndexes`, idempotente) desde el `onModuleInit` de cada repositorio. Las demás colecciones los crean cuando se usen.
 - Cupo del grupo = `countDocuments` sobre `players.groupId` (no sobre `groupMemberships`), para que una fila huérfana no ocupe un lugar.
 - Un choque de índice único de `tokenHash` o `recoveryHash` al insertar (probabilidad ínfima) responde 500 y el pedido se deshace; el cliente reintenta con identidad nueva.
+
+- `GET /v1/day` y `POST /v1/results` (módulo `results`) leen y escriben `daySets` (solo `lockedAt`), `dayAccess`, `results` y `players` (`lastActiveAt`, `score`, conteos, `level`), y leen `settings/rules`. `results` guarda `points`, `difficulty` y `family` del logro (propuesta: sin ellos no se pueden recalcular puntaje y conteos si el set se elimina) y `claimedAt` (propuesta: reserva de quien aplica el logro, ver `03`). `daySets.groupId` es `null` para el set general y `status` `published` es lo único que se sirve; Bloqueado = `lockedAt` presente. Los índices de `daySets`, `dayAccess` y `results` se crean al arrancar.
+- `settings/rules` (propuesta de forma, la escribirá el panel): `{ pointsByDifficulty: { "1": 10 }, levels: [ { requirements: [ { difficulty, family?, min } ], minScore? } ], midnightToleranceMinutes }`. `levels[L]` es lo que hace falta para pasar del nivel L al L+1; el nivel máximo es `levels.length`. Un requisito con `family` se evalúa con `countsByDifficultyFamily`; sin `family`, con `countsByDifficulty` (dificultad exacta). La zona horaria NO se lee de acá: sigue saliendo de `DEFAULT_TIME_ZONE`.
 
 Primer uso real: `GET /v1/banned-words` lee el documento `settings` con `_id: "bannedWords"` (`{ version, words[] }`), 1 lectura por pedido, sin índices propios. Sin documento = versión 0 y lista vacía (no se escribe nada al arrancar). Quién crea y edita ese documento (versión que sube con cada cambio) queda para el panel.
 

@@ -61,6 +61,8 @@ documentation/ (fuera del repo o enlazada) los .docx originales
 | `rate-limit` | Límites por IP: contadores en `rateLimits` con incremento atómico y TTL. Transversal como `platform`: lo usan registro, recuperación y login. Sale de `platform` porque necesita MongoDB y `platform` no puede importar de `database` sin ciclo. | database, platform |
 | `database` | Conexión a MongoDB (una por instancia), cierre ordenado. Transversal como `platform`: cualquier módulo con repositorio lo importa; solo importa de `platform`. | ninguno |
 
+`GET /v1/day` y `POST /v1/results` viven en `results` (usa players, day-sets y rules): `GET /v1/day` necesita el guard y el grupo del player y el set, y `day-sets` no puede importar `players`. `rules` expone también la función pura del nivel (`computeLevel`).
+
 `auth` son funciones puras exportadas (sin módulo de Nest, sin controlador). El registro `POST /v1/players` vive en `membership` porque toca jugador y grupo: usa `players` (apodo, credenciales, alta) y `groups` (leer el código); `membership` no importa `auth` ni `word-filter` directamente.
 
 Dentro de cada módulo: controlador (HTTP + validación con el schema) -> servicio (reglas) -> repositorio (MongoDB). Funciones puras con pruebas propias: cálculo de nivel, normalización de apodos, resolución del set del día.

@@ -100,3 +100,18 @@ Apodos duplicados dentro de un grupo, límite de frecuencia de gestos, silenciar
 | Caché de la lista de palabras | El registro hace 1 lectura de `settings` por pedido. Sin medir; cachear en memoria si pesa. |
 | Recuperar y perfil | Estado `RECOVERY_CODE_INVALID` (404) e `INVALID_TOKEN` (401) son propuesta. Límite de recuperación 100/hora por IP sin medir: un colegio entero detrás de una IP comparte el cupo. `MeResponse` no incluye grupo ni juguetes logrados (doc no los pide; confirmar con el juego). El cliente debe normalizar el código a mayúsculas antes de enviar. Falta decidir si recuperar debe actualizar `lastActiveAt`. |
 | Código de grupo en minúsculas | El contrato exige mayúsculas; el cliente debe normalizar antes de enviar. |
+
+## Pedir el día y enviar logro (pendientes)
+
+| Tema | Detalle |
+| --- | --- |
+| Contradicción doc 04 y doc 09 (conteos) | Doc 09 pide requisitos por dificultad Y familia; doc 04 solo tiene conteos separados. Se agregó `countsByDifficultyFamily` (propuesta). Confirmar o cambiar la regla de nivel. |
+| Forma de `settings/rules` | Propuesta en `04`. Sin documento: sin puntos por dificultad (0), sin niveles y tolerancia 30. Definir si faltar el documento debe ser un error. La zona horaria de las reglas no se consulta (sale de `DEFAULT_TIME_ZONE`). |
+| Campos nuevos de `results` | `points`, `difficulty`, `family` y `claimedAt` son propuesta. Reserva de 60 s sin medir. |
+| Comando de recálculo | Recalcular puntaje, conteos y nivel desde `results` y completar los `applied=false` viejos. Pendiente (doc 04 lo lista). Es lo que cubre la ventana entre sumar y marcar `applied`. |
+| Tolerancia y "desafío abierto" | El servidor acepta cualquier desafío del set de ayer dentro de la tolerancia, no solo el que estaba abierto (no lo sabe). Un cliente podría usarla para un desafío que no había abierto. Riesgo acotado al progreso propio. |
+| Cierre diario desactualizado | Doc 03 pide marcar desactualizado el cierre de una fecha ya cerrada al llegar un logro tardío. No hay `dailyStats` todavía. |
+| `durationMs` | Máximo de 24 h (propuesta). Se guarda; ningún endpoint lo expone. Revisar si hace falta guardarlo. |
+| Límite por IP | `GET /day` y `POST /results` no tienen límite (la tabla de doc 03 no los lista). Evaluar con la prueba de carga. |
+| Puntaje atrasado al reintentar | Un reenvío responde con el puntaje leído por el guard; con dos logros simultáneos puede quedar atrasado unos ms. El cliente reemplaza el puntaje y lo refresca en el próximo `GET /day`. |
+| Zona con horario de verano | `startOfDay` calcula el desfase con dos pasadas; un cambio de hora justo a medianoche no está cubierto (Montevideo no tiene). |
