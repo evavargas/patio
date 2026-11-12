@@ -15,6 +15,10 @@ const MESSAGES: Partial<Record<ErrorCode, string>> = {
   GROUP_FULL: "Ese grupo ya esta completo.",
   INVALID_TOKEN: "Tu sesion no es valida. Ingresa tu codigo de recuperacion.",
   RECOVERY_CODE_INVALID: "No encontramos ese codigo. Revisalo e intenta de nuevo.",
+  DAY_ACCESS_NOT_FOUND: "Primero hay que entrar al patio del dia.",
+  DAY_SET_NOT_FOUND: "Ese dia ya no tiene desafios disponibles.",
+  CHALLENGE_NOT_IN_SET: "Ese desafio no es parte de este dia.",
+  RESULT_DATE_NOT_ALLOWED: "Ese dia ya termino. Podes seguir con el de hoy.",
   RATE_LIMITED: "Hubo demasiados intentos. Proba de nuevo mas tarde.",
 };
 

@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const ROOT = join(import.meta.dirname, "..");
 // no-restricted-paths solo evalua imports que resuelven a un archivo real: se crean archivos de mentira
 // (`y.ts`). Se borra SOLO lo creado aca: nunca un directorio de modulo real.
-const FIXTURE_FILES = ["groups", "players", "database", "word-filter", "auth", "membership", "rate-limit"].map((m) => join(ROOT, "apps/api/src", m, "y.ts"));
+const FIXTURE_FILES = ["groups", "players", "database", "word-filter", "auth", "membership", "rate-limit", "rules", "day-sets", "results"].map((m) => join(ROOT, "apps/api/src", m, "y.ts"));
 const createdDirs: string[] = [];
 
 beforeAll(() => {
@@ -81,6 +81,19 @@ describe("reglas de lint del repo", () => {
   it("rate-limit es transversal pero no puede importar de modulos de negocio", async () => {
     expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../rate-limit/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
     expect(await rulesFor("apps/api/src/rate-limit/x.ts", 'import "../players/y.ts";\n')).toContain("import-x/no-restricted-paths");
+  });
+
+  it("results usa players, day-sets y rules; day-sets, rules y players no suben a results ni se cruzan fuera del mapa", async () => {
+    expect(await rulesFor("apps/api/src/results/x.ts", 'import "../players/y.ts";\nimport "../day-sets/y.ts";\nimport "../rules/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/results/x.ts", 'import "../groups/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/day-sets/x.ts", 'import "../players/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/day-sets/x.ts", 'import "../results/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/day-sets/x.ts", 'import "../groups/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/rules/x.ts", 'import "../players/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/rules/x.ts", 'import "../database/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/players/x.ts", 'import "../results/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/players/x.ts", 'import "../rules/y.ts";\n')).toContain("import-x/no-restricted-paths");
+    expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../results/y.ts";\n')).toContain("import-x/no-restricted-paths");
   });
 
   it("any, enum, as, Date.now, new Date y performance.now fallan fuera del reloj", async () => {

@@ -24,6 +24,20 @@ export interface AuthenticatedPlayer {
   score: number;
 }
 
+/** Estado del player despues de sumar un logro. Interno: el nivel nunca sale en `/v1`. */
+export interface PlayerProgress {
+  score: number;
+  level: number;
+  countsByDifficulty: Record<string, number>;
+  countsByDifficultyFamily: Record<string, number>;
+}
+
+export interface ResultIncrement {
+  points: number;
+  difficulty: number;
+  family?: string;
+}
+
 export interface NewPlayer {
   identity: NewIdentity;
   nickname: string;
@@ -39,7 +53,7 @@ export class PlayersService {
     @Inject(NicknameService) private readonly nicknames: Pick<NicknameService, "check">,
     @Inject(RateLimitService) private readonly rateLimit: Pick<RateLimitService, "hit">,
     @Inject(PlayersRepository)
-    private readonly repository: Pick<PlayersRepository, "insert" | "delete" | "countInGroup" | "findByTokenHash" | "replaceTokenByRecoveryHash">,
+    private readonly repository: Pick<PlayersRepository, "insert" | "delete" | "countInGroup" | "findByTokenHash" | "replaceTokenByRecoveryHash" | "touch" | "addResult" | "raiseLevel">,
   ) {}
 
   /** Apodo recortado, o NICKNAME_NOT_ALLOWED sin decir por que. */
@@ -71,6 +85,7 @@ export class PlayersService {
       score: 0,
       countsByDifficulty: {},
       countsByFamily: {},
+      countsByDifficultyFamily: {},
       level: 0,
       termsVersion,
       termsAcceptedAt: now,
@@ -97,6 +112,27 @@ export class PlayersService {
     // La busqueda ya es por hash (no filtra el token); la comparacion en tiempo constante es defensa adicional.
     if (doc === null || !timingSafeEqual(Buffer.from(hash), Buffer.from(doc.tokenHash))) return null;
     return { playerId: doc._id, nickname: doc.nickname, score: doc.score };
+  }
+
+  /** Marca actividad (`lastActiveAt`) y devuelve el grupo actual y el puntaje. 1 operacion. null si el player ya no existe. */
+  touch(playerId: string, now: Date): Promise<{ groupId: string | null; score: number } | null> {
+    return this.repository.touch(playerId, now);
+  }
+
+  /** Suma un logro al puntaje y a los conteos (por dificultad, familia y ambas) en UNA operacion atomica. */
+  async addResult(playerId: string, { points, difficulty, family }: ResultIncrement): Promise<PlayerProgress | null> {
+    const inc: Record<string, number> = { score: points, [`countsByDifficulty.${difficulty}`]: 1 };
+    if (family !== undefined) {
+      inc[`countsByFamily.${family}`] = 1;
+      inc[`countsByDifficultyFamily.${difficulty}:${family}`] = 1;
+    }
+    const doc = await this.repository.addResult(playerId, inc);
+    if (doc === null) return null;
+    return { score: doc.score, level: doc.level, countsByDifficulty: doc.countsByDifficulty, countsByDifficultyFamily: doc.countsByDifficultyFamily ?? {} };
+  }
+
+  raiseLevel(playerId: string, level: number): Promise<void> {
+    return this.repository.raiseLevel(playerId, level);
   }
 
   /**

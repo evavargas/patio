@@ -1,5 +1,6 @@
 import { type DynamicModule, Module } from "@nestjs/common";
 import { DatabaseModule } from "./database/database.module.ts";
+import { ResultsModule } from "./results/results.module.ts";
 import { MembershipModule } from "./membership/membership.module.ts";
 import { PlayersModule } from "./players/players.module.ts";
 import { PlatformModule, type PlatformOptions } from "./platform/platform.module.ts";
@@ -15,7 +16,7 @@ export class AppModule {
   static register({ withDatabase = true, ...platform }: AppOptions): DynamicModule {
     return {
       module: AppModule,
-      imports: [PlatformModule.register(platform), ...(withDatabase ? [DatabaseModule, WordFilterModule, MembershipModule, PlayersModule] : [])],
+      imports: [PlatformModule.register(platform), ...(withDatabase ? [DatabaseModule, WordFilterModule, MembershipModule, PlayersModule, ResultsModule] : [])],
     };
   }
 }
