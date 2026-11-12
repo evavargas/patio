@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "day.schema.json",
+  "$defs": {
+    "DayItem": {
+      "title": "DayItem",
+      "description": "Un desafio del set del dia, tal como se publico (copia). Texto plano, nunca HTML. La regla de logro viaja dentro de `mechanic.config` y el juego no la muestra. Si falta `points`, rige el de la dificultad. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": [
+        "challengeId",
+        "text",
+        "mechanic",
+        "difficulty",
+        "assets"
+      ],
+      "properties": {
+        "challengeId": {
+          "$ref": "primitives.schema.json#/$defs/ChallengeId"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "mechanic": {
+          "$ref": "mechanic.schema.json"
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "points": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "family": {
+          "enum": [
+            "resolver",
+            "descubrir",
+            "crear"
+          ]
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "primitives.schema.json#/$defs/AssetId"
+          }
+        }
+      }
+    },
+    "DayResponse": {
+      "title": "DayResponse",
+      "description": "Respuesta de GET /v1/day (200, con token del player, Cache-Control private no-store). `serverTime` y `dayEndsAt` son la hora del servidor: el juego calcula la diferencia con su reloj. `status` `available`: `items` trae el set de este player para `date` (queda fijo todo el dia); `noSet`: no hay set y `items` va vacio (el juego decide el texto; `dayEndsAt` sigue presente). `completedChallengeIds`: desafios del set ya logrados. No dice de donde salio el set, ni el grupo, ni el nivel. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": [
+        "serverTime",
+        "date",
+        "dayEndsAt",
+        "status",
+        "items",
+        "completedChallengeIds",
+        "score"
+      ],
+      "properties": {
+        "serverTime": {
+          "$ref": "primitives.schema.json#/$defs/IsoDateTime"
+        },
+        "date": {
+          "$ref": "primitives.schema.json#/$defs/DayKey"
+        },
+        "dayEndsAt": {
+          "$ref": "primitives.schema.json#/$defs/IsoDateTime"
+        },
+        "status": {
+          "enum": [
+            "available",
+            "noSet"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DayItem"
+          }
+        },
+        "completedChallengeIds": {
+          "type": "array",
+          "items": {
+            "$ref": "primitives.schema.json#/$defs/ChallengeId"
+          }
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

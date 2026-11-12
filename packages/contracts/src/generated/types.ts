@@ -112,6 +112,13 @@ export type ErrorCode =
   | "SET_LOCKED"
   | "UNSUPPORTED_SCHEMA_VERSION"
   | "VALIDATION_FAILED";
+/**
+ * UUID que genera el juego al lograr un desafio. Se reenvia igual en cada reintento.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "EventId".
+ */
+export type EventId = string;
 
 /**
  * Entrada de la generacion de tipos. No se valida contra este archivo.
@@ -293,4 +300,56 @@ export interface MeResponse {
  */
 export interface HealthResponse {
   status: "ok";
+}
+/**
+ * Un desafio del set del dia, tal como se publico (copia). Texto plano, nunca HTML. La regla de logro viaja dentro de `mechanic.config` y el juego no la muestra. Si falta `points`, rige el de la dificultad. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "DayItem".
+ */
+export interface DayItem {
+  challengeId: ChallengeId;
+  text: string;
+  mechanic: Mechanic;
+  difficulty: number;
+  points?: number;
+  family?: "resolver" | "descubrir" | "crear";
+  assets: AssetId[];
+}
+/**
+ * Respuesta de GET /v1/day (200, con token del player, Cache-Control private no-store). `serverTime` y `dayEndsAt` son la hora del servidor: el juego calcula la diferencia con su reloj. `status` `available`: `items` trae el set de este player para `date` (queda fijo todo el dia); `noSet`: no hay set y `items` va vacio (el juego decide el texto; `dayEndsAt` sigue presente). `completedChallengeIds`: desafios del set ya logrados. No dice de donde salio el set, ni el grupo, ni el nivel. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "DayResponse".
+ */
+export interface DayResponse {
+  serverTime: IsoDateTime;
+  date: DayKey;
+  dayEndsAt: IsoDateTime;
+  status: "available" | "noSet";
+  items: DayItem[];
+  completedChallengeIds: ChallengeId[];
+  score: number;
+}
+/**
+ * Cuerpo de POST /v1/results (con token del player). Solo se envia un desafio LOGRADO. `eventId` lo genera el juego y se reenvia igual en los reintentos. `date` es la fecha del set (hoy, o ayer dentro de la tolerancia de medianoche). `durationMs`: milisegundos entre abrir y lograr, hasta 24 h. Los servidores toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "SubmitResultRequest".
+ */
+export interface SubmitResultRequest {
+  eventId: EventId;
+  date: DayKey;
+  challengeId: ChallengeId;
+  durationMs: number;
+}
+/**
+ * Respuesta de POST /v1/results (200, tambien al reenviar el mismo logro). `score` es el puntaje actual del player: el cliente lo REEMPLAZA, no lo suma. `pointsEarned` son los puntos de ese logro. Sin nivel, sin intentos, sin solucion. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "SubmitResultResponse".
+ */
+export interface SubmitResultResponse {
+  score: number;
+  pointsEarned: number;
 }

@@ -15,6 +15,9 @@ import {
   isRecoverPlayerRequest,
   isRecoverPlayerResponse,
   isMeResponse,
+  isDayResponse,
+  isSubmitResultRequest,
+  isSubmitResultResponse,
 } from "../src/index.ts";
 
 const dir = (kind: "valid" | "invalid"): string[] =>
@@ -189,5 +192,57 @@ describe("recuperar player y perfil", () => {
     expect(isMeResponse({ nickname: "a" })).toBe(false);
     expect(isMeResponse({ nickname: "a", score: 0, extra: 1 })).toBe(true);
     expect(Object.keys(keysOf("me.valid.json")).sort()).toEqual(["nickname", "score"]);
+  });
+});
+
+describe("pedir el dia y enviar logro", () => {
+  const ex = (kind: "requests" | "responses", f: string): Record<string, unknown> =>
+    JSON.parse(readFileSync(join(import.meta.dirname, "../examples", kind, f), "utf8"));
+  const files = (kind: "requests" | "responses", prefix: string, ext: string): string[] =>
+    readdirSync(join(import.meta.dirname, "../examples", kind)).filter((f) => f.startsWith(prefix) && f.endsWith(ext)).sort();
+
+  it.each(files("responses", "day", ".valid.json"))("dia: acepta %s", (f) => {
+    expect(isDayResponse(ex("responses", f))).toBe(true);
+  });
+  it.each(files("responses", "day", ".invalid.json"))("dia: rechaza %s", (f) => {
+    expect(isDayResponse(ex("responses", f))).toBe(false);
+  });
+  it("dia: hay un ejemplo con set y uno sin set (con la hora de fin del dia)", () => {
+    expect(ex("responses", "day.valid.json")).toMatchObject({ status: "available" });
+    expect(ex("responses", "day-no-set.valid.json")).toMatchObject({ status: "noSet", items: [] });
+    expect(typeof ex("responses", "day-no-set.valid.json").dayEndsAt).toBe("string");
+  });
+  it("dia: un item sin challengeId o con mecanica desconocida no es valido, y tolera campos nuevos", () => {
+    const ok = ex("responses", "day.valid.json");
+    const item: Record<string, unknown> = Object.fromEntries(Object.entries(JSON.parse(JSON.stringify(ok.items))[0]));
+    const withoutId = Object.fromEntries(Object.entries(item).filter(([k]) => k !== "challengeId"));
+    expect(isDayResponse({ ...ok, items: [withoutId] })).toBe(false);
+    expect(isDayResponse({ ...ok, items: [{ ...item, mechanic: { type: "otra", schemaVersion: 1, config: {} } }] })).toBe(false);
+    expect(isDayResponse({ ...ok, extra: 1 })).toBe(true);
+  });
+  it("dia: sin nivel ni datos de otros en los ejemplos", () => {
+    for (const f of files("responses", "day", ".valid.json")) {
+      expect(JSON.stringify(ex("responses", f))).not.toMatch(/level|groupId|daySetId|playerId/i);
+    }
+  });
+
+  it.each(files("requests", "submit-result", ".valid.json"))("logro pedido: acepta %s", (f) => {
+    expect(isSubmitResultRequest(ex("requests", f))).toBe(true);
+  });
+  it.each(files("requests", "submit-result", ".invalid.json"))("logro pedido: rechaza %s", (f) => {
+    expect(isSubmitResultRequest(ex("requests", f))).toBe(false);
+  });
+  it("logro pedido: tolera campos nuevos y acota durationMs", () => {
+    const ok = ex("requests", "submit-result.valid.json");
+    expect(isSubmitResultRequest({ ...ok, extra: 1 })).toBe(true);
+    expect(isSubmitResultRequest({ ...ok, durationMs: 0 })).toBe(true);
+    expect(isSubmitResultRequest({ ...ok, durationMs: 86_400_001 })).toBe(false);
+    expect(isSubmitResultRequest({ ...ok, durationMs: 1.5 })).toBe(false);
+  });
+  it("logro respuesta: solo puntaje y puntos ganados (ni nivel, ni intentos, ni solucion)", () => {
+    expect(isSubmitResultResponse(ex("responses", "submit-result.valid.json"))).toBe(true);
+    expect(isSubmitResultResponse(ex("responses", "submit-result.invalid.json"))).toBe(false);
+    expect(Object.keys(ex("responses", "submit-result.valid.json")).sort()).toEqual(["pointsEarned", "score"]);
+    expect(isSubmitResultResponse({ score: 10 })).toBe(false);
   });
 });

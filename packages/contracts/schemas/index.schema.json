@@ -22,6 +22,11 @@
     "RecoverPlayerRequest": { "$ref": "player.schema.json#/$defs/RecoverPlayerRequest" },
     "RecoverPlayerResponse": { "$ref": "player.schema.json#/$defs/RecoverPlayerResponse" },
     "MeResponse": { "$ref": "player.schema.json#/$defs/MeResponse" },
-    "HealthResponse": { "$ref": "health.schema.json#/$defs/HealthResponse" }
+    "HealthResponse": { "$ref": "health.schema.json#/$defs/HealthResponse" },
+    "EventId": { "$ref": "primitives.schema.json#/$defs/EventId" },
+    "DayItem": { "$ref": "day.schema.json#/$defs/DayItem" },
+    "DayResponse": { "$ref": "day.schema.json#/$defs/DayResponse" },
+    "SubmitResultRequest": { "$ref": "result.schema.json#/$defs/SubmitResultRequest" },
+    "SubmitResultResponse": { "$ref": "result.schema.json#/$defs/SubmitResultResponse" }
   }
 }

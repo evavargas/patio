@@ -1,0 +1,59 @@
+{
+  "serverTime": "2026-11-11T15:00:00.000Z",
+  "date": "2026-11-11",
+  "dayEndsAt": "2026-11-12T03:00:00.000Z",
+  "status": "available",
+  "items": [
+    {
+      "challengeId": "ch-reparto-01",
+      "text": "Ayúdame a repartir estas 20 manzanas en las 4 bolsas.",
+      "mechanic": {
+        "type": "dragDrop",
+        "schemaVersion": 1,
+        "config": {
+          "items": {
+            "assetId": "manzana",
+            "count": 20
+          },
+          "containers": {
+            "assetId": "bolsa",
+            "count": 4
+          },
+          "rule": {
+            "type": "equalShare"
+          }
+        }
+      },
+      "difficulty": 2,
+      "points": 20,
+      "family": "resolver",
+      "assets": [
+        "manzana",
+        "bolsa"
+      ]
+    },
+    {
+      "challengeId": "ch-falta-01",
+      "text": "¿Qué número falta?",
+      "mechanic": {
+        "type": "numberInput",
+        "schemaVersion": 1,
+        "config": {
+          "expression": "7 + {a} = 12",
+          "fields": [
+            {
+              "id": "a",
+              "expected": 5
+            }
+          ]
+        }
+      },
+      "difficulty": 1,
+      "assets": []
+    }
+  ],
+  "completedChallengeIds": [
+    "ch-falta-01"
+  ],
+  "score": 10
+}

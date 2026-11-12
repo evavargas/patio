@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "result.schema.json",
+  "$defs": {
+    "SubmitResultRequest": {
+      "title": "SubmitResultRequest",
+      "description": "Cuerpo de POST /v1/results (con token del player). Solo se envia un desafio LOGRADO. `eventId` lo genera el juego y se reenvia igual en los reintentos. `date` es la fecha del set (hoy, o ayer dentro de la tolerancia de medianoche). `durationMs`: milisegundos entre abrir y lograr, hasta 24 h. Los servidores toleran campos nuevos.",
+      "type": "object",
+      "required": [
+        "eventId",
+        "date",
+        "challengeId",
+        "durationMs"
+      ],
+      "properties": {
+        "eventId": {
+          "$ref": "primitives.schema.json#/$defs/EventId"
+        },
+        "date": {
+          "$ref": "primitives.schema.json#/$defs/DayKey"
+        },
+        "challengeId": {
+          "$ref": "primitives.schema.json#/$defs/ChallengeId"
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000
+        }
+      }
+    },
+    "SubmitResultResponse": {
+      "title": "SubmitResultResponse",
+      "description": "Respuesta de POST /v1/results (200, tambien al reenviar el mismo logro). `score` es el puntaje actual del player: el cliente lo REEMPLAZA, no lo suma. `pointsEarned` son los puntos de ese logro. Sin nivel, sin intentos, sin solucion. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": [
+        "score",
+        "pointsEarned"
+      ],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pointsEarned": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

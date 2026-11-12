@@ -1,5 +1,6 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import bannedWords from "../schemas/banned-words.schema.json" with { type: "json" };
+import day from "../schemas/day.schema.json" with { type: "json" };
 import challenge from "../schemas/challenge.schema.json" with { type: "json" };
 import dragDrop from "../schemas/drag-drop.schema.json" with { type: "json" };
 import error from "../schemas/error.schema.json" with { type: "json" };
@@ -7,13 +8,14 @@ import health from "../schemas/health.schema.json" with { type: "json" };
 import mechanic from "../schemas/mechanic.schema.json" with { type: "json" };
 import player from "../schemas/player.schema.json" with { type: "json" };
 import numberInput from "../schemas/number-input.schema.json" with { type: "json" };
+import result from "../schemas/result.schema.json" with { type: "json" };
 import primitives from "../schemas/primitives.schema.json" with { type: "json" };
 import wordDrop from "../schemas/word-drop.schema.json" with { type: "json" };
-import type { BannedWordsResponse, Challenge, DayKey, ErrorBody, HealthResponse, IsoDateTime, MeResponse, PlayerId, PlayerToken, RecoverPlayerRequest, RecoverPlayerResponse, RegisterPlayerRequest, RegisterPlayerResponse } from "./generated/types.ts";
+import type { BannedWordsResponse, Challenge, ChallengeId, DayKey, DayResponse, SubmitResultRequest, SubmitResultResponse, ErrorBody, HealthResponse, IsoDateTime, MeResponse, PlayerId, PlayerToken, RecoverPlayerRequest, RecoverPlayerResponse, RegisterPlayerRequest, RegisterPlayerResponse } from "./generated/types.ts";
 
 const ajv = new Ajv2020({ strict: true });
 ajv.addKeyword("tsType"); // solo lo lee el generador de tipos
-for (const s of [primitives, error, health, bannedWords, player, dragDrop, numberInput, wordDrop, mechanic, challenge]) {
+for (const s of [primitives, error, health, bannedWords, player, dragDrop, numberInput, wordDrop, mechanic, challenge, day, result]) {
   ajv.addSchema(s);
 }
 
@@ -39,3 +41,7 @@ export const isRecoverPlayerRequest = compile<RecoverPlayerRequest>("player.sche
 export const isRecoverPlayerResponse = compile<RecoverPlayerResponse>("player.schema.json#/$defs/RecoverPlayerResponse");
 export const isMeResponse = compile<MeResponse>("player.schema.json#/$defs/MeResponse");
 export const isPlayerToken = compile<PlayerToken>("primitives.schema.json#/$defs/PlayerToken");
+export const isDayResponse = compile<DayResponse>("day.schema.json#/$defs/DayResponse");
+export const isSubmitResultRequest = compile<SubmitResultRequest>("result.schema.json#/$defs/SubmitResultRequest");
+export const isSubmitResultResponse = compile<SubmitResultResponse>("result.schema.json#/$defs/SubmitResultResponse");
+export const isChallengeId = compile<ChallengeId>("primitives.schema.json#/$defs/ChallengeId");
