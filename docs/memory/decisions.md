@@ -2,6 +2,23 @@
 
 Formato: fecha, decisión, motivo breve, dónde aplica. Lo más reciente va arriba. Estado "doc pendiente" = decidido pero el documento original de arquitectura o diseño todavía no lo refleja.
 
+## 2026-11-13 (juego conectado a la API, versión mínima de punta a punta)
+
+- Sin dependencias nuevas de producción. Se suman `@patio/contracts` y `@patio/theme` (workspace) y `vitest` 5.1.0 (ya usado en el repo) como devDependency del juego. Del contrato el juego importa SOLO tipos (`import type`): los validadores usan ajv y eval, no entran al bundle. El cliente HTTP es `fetch` propio (`src/lib/api.ts`), con tiempo máximo de 15 s; sin red es `ApiError` con status 0. Proxy de `/v1` a 127.0.0.1:8080 en Vite; en producción `VITE_API_URL`.
+- i18n del juego: catálogo propio `es-UY` y `en` en `src/i18n/texts.ts` (el tipo obliga a que `en` tenga todas las claves). No se eligió librería (sigue pendiente en doc 05). Idioma inicial por `navigator.language`, cambiable con un botón en las pantallas de entrada, guardado en el almacenamiento. Sin Perfil todavía, así que ahí no hay selector.
+- Estilos: CSS plano con los tokens de `@patio/theme` (`--c-*`, `--t-*`) y `ThemeProvider` (modo `system`). Tailwind del juego queda para después (no se instaló). Los espacios y blancos táctiles de 48 dp siguen locales en `styles.css` hasta que el tema tenga token de espaciado (`--t-size-touch` del tema es 2,75 rem, el juego pide 3 rem).
+- Términos: la casilla y el texto (`<details>`) van dentro de la pantalla de Registro, sin pantalla aparte. `termsVersion` = "1". El texto es provisional (redacción pendiente, doc 09).
+- Código de recuperación: se muestra UNA vez. Se guarda solo hasta que la persona toca "Ya lo anoté" y entonces se borra; si cierra la app antes, se lo muestra de nuevo. La sesión guardada es `{playerId, token, nickname}`. No hay Perfil, así que después no se puede ver.
+- Almacenamiento: interfaz asíncrona `KeyValueStorage` con implementación de `localStorage`; Preferences de Capacitor entra cambiando esa implementación. Claves `patio-session`, `patio-pending-recovery-code`, `patio-pending-results`, `patio-locale`.
+- Cola de logros (`lib/result-queue.ts`): persistida, mismo `eventId` en cada reintento, espera 5 s duplicada hasta 60 s, sin aviso al jugador. 401 espera a la recuperación de sesión (si hay un desafío abierto, se atiende al cerrarlo). Cualquier otro 4xx se descarta (reintentar no lo arregla). El puntaje de la respuesta REEMPLAZA al local.
+- `eventId`: UUID v4 con `getRandomValues` (no `randomUUID`, que no existe en http de la red local).
+- Reloj: `syncServerTime` guarda la diferencia con `serverTime` de cada GET /day; `serverNowMs()` decide si pasó `dayEndsAt` al cerrar un desafío (entonces pide el día de nuevo). Se vuelve a pedir el día al volver a primer plano. No se muestra hora (doc 09, fin del día).
+- Juguetes: puntos válidos precalculados en grilla (fuera de obstáculos, árboles y salida), baraja con PRNG mulberry32 sembrado con FNV-1a de `playerId + fecha`, distancia mínima 5 que se relaja si faltan puntos; el color sale del mismo PRNG. Se abren tocando el juguete en la escena o con la lista de botones "Juguete N" (alternativa de teclado y lector). Logrado = gris y más chico, el botón queda enfocable (`aria-disabled`) para devolver el foco. No hace falta acercarse para abrirlo.
+- Mecánicas: `dragDrop` con piezas idénticas (arrastre con puntero; botones "Poner uno en / Sacar uno de" por contenedor como alternativa de teclado; las piezas van `aria-hidden`); `numberInput` con `input` de texto, `inputmode` numérico o decimal y coma o punto; `wordDrop` con dnd-kit (puntero y teclado) más un `select` por hueco. Se evalúa en cuanto se reparte todo o se completan los huecos. Mensaje de no logrado siempre "Probá otra estrategia." sin pistas. `schemaVersion` distinta de 1: aviso de actualizar.
+- Cierre: al lograr el último juguete (o al entrar con todo logrado) se muestra "Terminaste tu recreo" con el puntaje y "Pasear por el patio". Sin set: "Vuelve pronto", sin hora.
+- Escena: el bucle de R3F corre solo con la pantalla `yard`; con cualquier otra pantalla encima se pausa. El modo `?perf=1` carga un día fijo (`perf/perf-fixture.ts`) sin API.
+- Verificación de punta a punta (Chrome headless + API + `db:seed`): ver el informe de la tarea. Sin axe-core (no está instalado en el repo).
+
 ## 2026-11-13 (panel, parte 2: Desafíos, Días, Reglas, Palabras prohibidas, Cuentas)
 
 - Sin dependencias nuevas. Todo con `<dialog>`, `<select>`, `<textarea>` y casillas nativas, y el calendario escrito a mano (tabla de botones, lunes primero, aritmética de `DayKey` en UTC en `features/day-sets/calendar.ts`). `react-day-picker` (shadcn Calendar) no se instaló.

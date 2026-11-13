@@ -178,3 +178,18 @@ Apodos duplicados dentro de un grupo, límite de frecuencia de gestos, silenciar
 | Panel: validación de formularios | Los límites de los schemas están repetidos a mano en `challenge-form.ts`, `rules-form.ts` y los formularios de Cuentas (sigue pendiente la versión precompilada de los validadores). |
 | Panel: autor eliminado | La lista de Desafíos dice "Otra persona" para cualquier autor ajeno, incluida una cuenta eliminada. |
 
+
+## Juego conectado a la API (pendientes, 2026-11-13)
+
+| Tema | Detalle |
+| --- | --- |
+| Perfil | No existe. Falta apodo, puntaje, elegir tema y modo, selector de idioma y ver el código de recuperación (hoy se muestra una sola vez). `GET /v1/me` no se usa todavía. |
+| Assets de desafíos | No hay `packages/assets` ni manifiesto: el juego muestra el `assetId` como texto ("manzana", "bolsa") y las piezas son círculos. Hace falta nombre traducible e imagen por `assetId`. |
+| Términos | El texto de la pantalla de Registro es provisional; falta la redacción y revisión (doc 09). |
+| Reglas con contenido imposible | `equalShare` con piezas no divisibles o `targetCounts` que no suma el total nunca se logran. El juego no avisa (no muestra la solución). Conviene que el panel avise al crear el desafío. |
+| Lista de palabras | El juego descarga la lista en cada Registro, sin guardar la versión. Si falla la descarga el servidor igual valida. |
+| Reintentos sin red | El juego reintenta en silencio; no hay indicador de logros pendientes (decidido para no generar alarma). Un logro rechazado con 4xx (por ejemplo fuera de la tolerancia de medianoche) se descarta sin avisar. |
+| Abrir juguete | Se abre tocándolo sin acercarse al personaje. Confirmar si debe exigir cercanía. |
+| Capacitor | No agregado (sin Android SDK). La abstracción de almacenamiento está lista para Preferences. |
+| axe-core | No está en el repo: la auditoría automática de accesibilidad del juego no se corrió. Falta TalkBack y lector en dispositivo. |
+| Tailwind en el juego | Decidido en doc 05 pero no instalado: el juego usa CSS plano con tokens del tema. |
