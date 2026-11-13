@@ -84,9 +84,9 @@ Orden de autoridad si hay contradicción: `docs/memory/decisions.md` (lo más re
 
 ## Comandos
 
-Existen: `pnpm db:up` (Mongo local en Docker, espera a que esté healthy; hace falta para `pnpm test` completo y `pnpm dev:api`), `pnpm db:down` (baja el contenedor; NO borra el volumen `patio-mongo-data`), `pnpm dev:api` (compila y levanta la API en modo desarrollo), `pnpm dev:game`, `pnpm typecheck`, `pnpm test` (contratos, API y límites; las pruebas de integración fallan con un mensaje claro si Mongo no está arriba), `pnpm contracts:generate` (tipos desde `packages/contracts/schemas`; no editar `src/generated`), `pnpm build`, `pnpm lint` (ESLint 9, config en `eslint.config.js`; la prueba de límites de importación corre con `pnpm test`).
+Existen: `pnpm db:up` (Mongo local en Docker, espera a que esté healthy; hace falta para `pnpm test` completo y `pnpm dev:api`), `pnpm db:down` (baja el contenedor; NO borra el volumen `patio-mongo-data`), `pnpm dev:api` (compila y levanta la API en modo desarrollo), `pnpm dev:game`, `pnpm dev:panel` (Vite en :5173 con proxy de `/v1` a la API en 127.0.0.1:8080), `pnpm themes:check` (tokens completos y contraste AA de los temas; `pnpm themes:generate` regenera el CSS), `pnpm typecheck`, `pnpm test` (contratos, API y límites; las pruebas de integración fallan con un mensaje claro si Mongo no está arriba), `pnpm contracts:generate` (tipos desde `packages/contracts/schemas`; no editar `src/generated`), `pnpm --filter @patio/api create-admin` (crea el primer administrator, ver `apps/api/README.md`), `pnpm db:seed` (datos dummy en `patio_dev`, solo con NODE_ENV=development; credenciales en `apps/api/README.md`), `pnpm build`, `pnpm lint` (ESLint 9, config en `eslint.config.js`; la prueba de límites de importación corre con `pnpm test`).
 
-Por crear: `pnpm dev:panel`, `pnpm test:e2e`, `pnpm themes:check`. Cuando existan, actualiza esta sección.
+Por crear: `pnpm test:e2e`. Cuando existan, actualiza esta sección.
 
 ## Mantenimiento de este harness
 

@@ -10,3 +10,4 @@ Cómo prefiere la persona responsable del proyecto que se trabaje y se comunique
 - Quiere analizar las opciones por mérito técnico, sin condicionarlas por la situación actual (por ejemplo, sin descartar una opción solo porque hoy no hay servicio externo).
 - Quiere que se le expliquen los problemas y lo que ofrece cada solución antes de decidir cuando hay compromisos reales.
 - Primero se documenta y se decide. No se empieza a programar hasta que lo indique.
+- Prioriza tener una versión usable cuanto antes sobre la robustez para escala: hoy habrá muy pocos usuarios. No pedir ni escribir pruebas de concurrencia por ahora (decidido el 2026-11-12).

@@ -68,4 +68,4 @@ Aplica al juego Y al panel. Los dos comparten formato de tema y nombres de token
 
 ## Pendiente
 
-Paleta y tipografía del prototipo: "Patio Uruguayo Sunset" con Lexend (`docs/design/stitch/DESIGN-patio-uruguayo-sunset.md`), propuesta hasta pasarla a tokens de `packages/theme`. Confirmar licencia (OFL) de Lexend antes de incluirla. Con i18n, `<html lang>` sigue el idioma elegido en el perfil (`es-UY` por defecto).
+Hecho en `packages/theme` (2026-11-12): tema `default` con la paleta "Patio Uruguayo Sunset" y Lexend autoalojada (OFL-1.1, subconjunto latin). `pnpm themes:check` valida tokens y contraste; `pnpm themes:generate` produce `src/generated/`. El preset de Tailwind es CSS (Tailwind v4, `@theme`). Los tokens de forma y tipografía son por tema; los de color y sombra, por tema y modo. Pendiente: espaciados como token, `VITE_DEFAULT_THEME` y `?theme=id`. Con i18n, `<html lang>` sigue el idioma elegido (`es-UY` por defecto).

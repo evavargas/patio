@@ -13,9 +13,9 @@ Una base, una colección por entidad. Límites del plan gratuito: 0,5 GB, 500 co
 | `daySets` | `date` (AAAA-MM-DD en la zona del día), `groupId` (vacío = general), `status`, `items[]` (copia de cada desafío al publicar), `lockedAt?`, `timezone` | único: {date, groupId} |
 | `dayAccess` | `playerId`, `date`, `daySetId`, `groupId?`, `createdAt` | único: {playerId, date}; {date, groupId} |
 | `results` | `eventId`, `playerId`, `challengeId`, `daySetId`, `date`, `groupId?`, `applied`, `claimedAt` (propuesta), `durationMs`, `points`, `difficulty`, `family?` (propuesta), `createdAt` | únicos: `eventId`, {playerId, daySetId, challengeId}; {date, groupId} |
-| `accounts` | `email`, `role` (`moderator`\|`administrator`), `passwordHash`, `mustChangePassword`, `active`, `createdAt`, `lastLoginAt` | único: `email` |
-| `accountInvitations` (propuesta, forma por decidir) | Token de invitación guardado como hash, `email`, `role`, `expiresAt`, `acceptedAt?`. Solo si la invitación por correo necesita un token propio; si no, se descarta. | por decidir |
-| `refreshTokens` | `accountId`, `familyId`, `tokenHash`, `expiresAt`, `rotatedAt?` | único: `tokenHash`; TTL en `expiresAt` |
+| `accounts` | `_id` (UUID), `email` (normalizado: recortado y en minúsculas), `role` (`moderator`\|`administrator`), `passwordHash` (argon2id, formato PHC), `mustChangePassword`, `active`, `createdAt`, `passwordChangedAt` (propuesta), `lastLoginAt?` | único: `email` |
+| `accountInvitations` (propuesta) | `_id` (UUID), `email`, `tokenHash` (SHA-256 del token de 32 bytes), `createdBy`, `createdAt`, `expiresAt` (7 días), `acceptedAt?`. Solo se invita como moderator. Reinvitar al mismo correo reemplaza la anterior. | únicos: `tokenHash`, `email`; TTL en `expiresAt` |
+| `refreshTokens` | `accountId`, `familyId`, `tokenHash` (SHA-256), `expiresAt`, `rotatedAt?` | único: `tokenHash`; TTL en `expiresAt`; `familyId` y `accountId` (propuesta, para revocar sin recorrer la colección) |
 | `settings` | tres documentos: `rules` (puntos, reglas de nivel, zona horaria, tolerancia de medianoche), `limits` (límites por IP), `bannedWords` (versión y palabras) | por `_id` |
 | `dailyStats` | cierres diarios (global y por grupo) | único: {date, scope, groupId} |
 | `rateLimits` | `key`, `count`, `windowStart`, `expiresAt` | único: `key`; TTL en `expiresAt` |
@@ -40,7 +40,17 @@ Usos reales hasta ahora:
 - `GET /v1/day` y `POST /v1/results` (módulo `results`) leen y escriben `daySets` (solo `lockedAt`), `dayAccess`, `results` y `players` (`lastActiveAt`, `score`, conteos, `level`), y leen `settings/rules`. `results` guarda `points`, `difficulty` y `family` del logro (propuesta: sin ellos no se pueden recalcular puntaje y conteos si el set se elimina) y `claimedAt` (propuesta: reserva de quien aplica el logro, ver `03`). `daySets.groupId` es `null` para el set general y `status` `published` es lo único que se sirve; Bloqueado = `lockedAt` presente. Los índices de `daySets`, `dayAccess` y `results` se crean al arrancar.
 - `settings/rules` (propuesta de forma, la escribirá el panel): `{ pointsByDifficulty: { "1": 10 }, levels: [ { requirements: [ { difficulty, family?, min } ], minScore? } ], midnightToleranceMinutes }`. `levels[L]` es lo que hace falta para pasar del nivel L al L+1; el nivel máximo es `levels.length`. Un requisito con `family` se evalúa con `countsByDifficultyFamily`; sin `family`, con `countsByDifficulty` (dificultad exacta). La zona horaria NO se lee de acá: sigue saliendo de `DEFAULT_TIME_ZONE`.
 
+- Autenticación del panel (módulo `accounts`): `accounts` y `refreshTokens` se crean al arrancar con sus índices (`createIndexes`, idempotente). Revocar = borrar filas (por `familyId` o por `accountId`); el TTL limpia lo vencido con hasta ~60 s de atraso, por eso la lógica compara `expiresAt`. Un token rotado se conserva hasta su vencimiento para detectar la reutilización. `rateLimits` guarda las claves `login:<IP>:<hash del correo>` y `change-password:<accountId>`. Eliminar un moderator debe borrar sus `refreshTokens` (ya lo pide la tabla de eliminaciones; la eliminación de cuentas no está implementada).
+
 Primer uso real: `GET /v1/banned-words` lee el documento `settings` con `_id: "bannedWords"` (`{ version, words[] }`), 1 lectura por pedido, sin índices propios. Sin documento = versión 0 y lista vacía (no se escribe nada al arrancar). Quién crea y edita ese documento (versión que sube con cada cambio) queda para el panel.
+
+Panel completo (2026-11-12, propuestas):
+
+- `challenges` guarda el contenido plano (`text`, `mechanic`, `difficulty`, `points?`, `family?`, `assets`), `authorId`, `status` (`active`|`archived`), `version` (sube en cada edición y al archivar), `createdAt`, `updatedAt`. Al borrar al autor el desafío queda con su `authorId`: nadie lo edita salvo el administrator.
+- `daySets` gana `challengeIds` (la lista del borrador; `items` solo se llena al publicar y se vacía al volver a borrador). Editar un set publicado y sin bloquear lo devuelve a borrador.
+- `settings` suma `limits` (`{ limits: { register, groupCode, recover, login } }`, cada uno `{ max, windowSeconds }`). Hoy solo el panel lo lee y escribe; los límites efectivos siguen saliendo de la configuración (pendiente).
+- `settings/bannedWords`: cada `PUT` hace `$set words` + `$inc version` con upsert (la primera vez queda en versión 1).
+- Estadísticas sin `dailyStats` (propuesta): agregaciones directas sobre `players`, `results` y `dayAccess` con el alcance, solo días cerrados (hasta ayer, rango máximo 92 días). `available` del ranking de compromiso = suma de `items` de los sets que el player abrió en el rango.
 
 ## Eliminaciones (solo administrator, definitivas, sin papelera)
 

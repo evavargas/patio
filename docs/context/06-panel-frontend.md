@@ -1,6 +1,6 @@
 # Panel (apps/panel)
 
-Stack: React + TypeScript + Vite, React Router, TanStack Query y Table, Zustand mínimo, shadcn/ui sobre Tailwind, Recharts (v3 vía envoltorios de shadcn), dnd-kit (parte de `@dnd-kit/core`; revisar madurez de `@dnd-kit/react` al implementar). Textos con i18n (librería por elegir, la misma que el juego), idiomas español `es-UY` (por defecto) e inglés, selector de idioma en el menú de la cuenta. App de una sola página.
+Stack: React + TypeScript + Vite, React Router, TanStack Query y Table, Zustand mínimo, shadcn/ui sobre Tailwind, Recharts (v3 vía envoltorios de shadcn), dnd-kit (parte de `@dnd-kit/core`; revisar madurez de `@dnd-kit/react` al implementar). Textos con i18n (`i18next` + `react-i18next`, catálogos JSON en `apps/panel/src/i18n/locales`), idiomas español `es-UY` (por defecto) e inglés, selector de idioma en el menú de la cuenta. App de una sola página.
 
 ## Diseño de referencia (Stitch)
 
@@ -26,7 +26,7 @@ Carpetas por funcionalidad (`features/`), una por vista: dashboard, players, gro
 
 ## Sesión y permisos en la interfaz
 
-Access token en memoria; refresh en el almacenamiento del navegador. El cliente de la API renueva UNA sola vez ante un 401 (las llamadas simultáneas esperan la misma renovación) y reintenta; si falla, cierra sesión. Rutas protegidas por rol; la interfaz oculta lo que el rol no puede hacer, pero la seguridad real está en el servidor. Con `mustChangePassword` solo existe la pantalla de cambio de contraseña. CSP estricta: sin scripts en línea, conexión solo a la API.
+Access token en memoria; refresh en `sessionStorage` (sobrevive a recargas, no a cerrar la pestaña). El cliente de la API renueva UNA sola vez ante un 401 (las llamadas simultáneas esperan la misma renovación) y reintenta; si falla, cierra sesión. Rutas protegidas por rol; la interfaz oculta lo que el rol no puede hacer, pero la seguridad real está en el servidor. Con `mustChangePassword` solo existe la pantalla de cambio de contraseña. CSP estricta: sin scripts en línea, conexión solo a la API.
 
 ## Eliminaciones (administrator)
 

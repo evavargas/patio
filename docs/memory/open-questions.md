@@ -115,3 +115,66 @@ Apodos duplicados dentro de un grupo, límite de frecuencia de gestos, silenciar
 | Límite por IP | `GET /day` y `POST /results` no tienen límite (la tabla de doc 03 no los lista). Evaluar con la prueba de carga. |
 | Puntaje atrasado al reintentar | Un reenvío responde con el puntaje leído por el guard; con dos logros simultáneos puede quedar atrasado unos ms. El cliente reemplaza el puntaje y lo refresca en el próximo `GET /day`. |
 | Zona con horario de verano | `startOfDay` calcula el desfase con dos pasadas; un cambio de hora justo a medianoche no está cubierto (Montevideo no tiene). |
+
+## Autenticación del panel (pendientes)
+
+| Tema | Detalle |
+| --- | --- |
+| Alcance de "por IP y correo" | Hoy hay UN contador por par IP + correo (10 por 15 min). No frena a quien rota IP contra un mismo correo ni a quien prueba muchos correos desde una IP. Un contador solo por correo permitiría bloquear a una cuenta ajena. Decidir si se agrega un segundo contador (por IP, con valor mayor) y qué se acepta. |
+| Vida del refresh token | 7 días con tope absoluto (propuesta). Decidir si debe ser deslizante o más corto. |
+| Política de contraseñas | 15 a 128 caracteres sin composición, distinta de la actual (propuesta, ASVS 5.0). Falta decidir si se rechazan contraseñas comunes o filtradas (requeriría una lista local; ningún servicio externo). |
+| Costo de argon2id en Cloud Run | Sin medir. Medir latencia de login y memoria con carga concurrente en 512 MiB (cada hash usa 19 MiB; el pool de libuv admite 4 a la vez). |
+| Versión de Node en el despliegue | `crypto.argon2` exige Node >= 24.7.0. La imagen de Cloud Run debe fijar una versión 24.x posterior. |
+| Access token tras cambiar la contraseña | Un token emitido en el mismo segundo del cambio sigue sirviendo hasta 15 min (granularidad de `iat`). Aceptado. |
+| Cambio de contraseña a mitad | Si el proceso cae entre guardar la contraseña y borrar los refresh tokens, los viejos siguen vivos hasta repetir el cambio. Un refresh concurrente podría sobrevivir al borrado (ventana de milisegundos). |
+| Carrera de refresh | Con dos refresh simultáneos puede quedar un token vivo en una familia que "debió" revocarse (ventana de milisegundos). Nunca dos exitos. |
+| `accountId` en los logs | Doc 03 pide `accountId` en los logs de pedido; el logger solo registra ruta, estado y duración (tampoco registra `playerId`). Falta decidir cómo lo dejan los guards. |
+| Rotación de `JWT_SECRET` | Cambiarlo invalida todos los access tokens (los refresh siguen). Sin soporte de dos claves a la vez. |
+| Comando `create-admin` | Probado con variables de entorno; el modo interactivo (terminal, sin eco) no se pudo probar sin terminal. Crea otro administrator aunque ya haya uno con otro correo. |
+| Invitación por correo, restablecer contraseña, CRUD de cuentas, servicio de alcance | Fuera de esta tarea. Al eliminar o desactivar una cuenta hay que borrar sus `refreshTokens` (hoy el guard ya la rechaza al instante, pero las filas quedan hasta el TTL). |
+
+## Base del panel (pendientes)
+
+| Tema | Detalle |
+| --- | --- |
+| Validadores de contracts en el navegador | Ajv usa `new Function`: choca con la CSP estricta. Los formularios de mecánicas y el cambio de contraseña (hoy copia a mano 15 a 128) necesitan validadores precompilados (Ajv standalone) generados en `contracts:generate`. |
+| CSP real | `apps/panel/public/_headers` tiene `API_ORIGIN` sin reemplazar. No se probó con la CSP puesta (Vite en desarrollo inyecta scripts en línea). Verificar en un build servido con esas cabeceras. |
+| Refresh en `sessionStorage` | Duplicar una pestaña copia el refresh token y la rotación con detección de reutilización puede cerrar la sesión. Decidir si importa. |
+| Vistas | Todas son "próximamente". `Reglas` la ve el moderator (solo lectura, doc 03); límites por IP van dentro de Reglas y solo para administrator. Falta la vista Rankings en el diseño de Stitch. |
+| Textos | Revisión de voseo y copy por la persona responsable. Hay claves de error solo para los códigos de auth; cada vista agrega las suyas. |
+| Pruebas pendientes | axe-core en claro y oscuro, e2e con Playwright, prueba del menú móvil y del teclado. No se corrió ninguna. |
+| Aceptar invitación | Responde 204 y no entrega sesión: la pantalla manda a ingresar. Confirmar que es lo deseado. |
+| Espaciados y `?theme=id` | No son token ni existen. El selector de tema solo aparece con más de un tema registrado. |
+
+## API del panel (pendientes y propuestas, 2026-11-12)
+
+| Tema | Detalle |
+| --- | --- |
+| Límites por IP efectivos | `PUT /limits` guarda en `settings/limits` pero registro, recuperación y login siguen leyendo la configuración. Falta leerlos de la base con caché de 1 minuto. |
+| Envío real de correo | Probado solo con un transporte en memoria. Falta probar Gmail SMTP con una contraseña de aplicación real (y qué pasa con el límite diario de Gmail). |
+| `.env.example` | La herramienta no dejó crearlo en la raíz. Las variables están en `apps/api/README.md`; crearlo a mano. |
+| Estadísticas | Sin `dailyStats`. Con miles de players hay que pasar al cierre diario perezoso de doc 03. "Logro de ayer" del resumen se entrega como conteos (entraron, con logro, logros), no como porcentaje. El nivel por jugador es el actual, no el de ayer. |
+| Pertenencia | Sigue pendiente el comando de verificación y reparación de `groupMemberships` vs `players.groupId` (mover y eliminar grupo dependen de que repetir el pedido repare). |
+| Archivar desafíos | No hay desarchivar. Un desafío archivado no se puede publicar en sets nuevos; los sets ya publicados lo conservan. |
+| Assets de desafíos | No se valida que el `assetId` exista en el catálogo (no hay manifiesto todavía). |
+| Autor eliminado | Al eliminar un moderator sus desafíos quedan con su `authorId` (no hay marca explícita); la lista no dice "autor eliminado". |
+| Invitación | Una vigente por correo; sin reenvío automático ni lista de invitaciones pendientes en el panel. Aceptar no abre sesión (204). |
+| Cursor de players | Orden por `_id` (aleatorio): el panel debe ordenar dentro de la página. Si se necesita orden por apodo o fecha, cambia el cursor. |
+| Alcance del moderator | Un moderator no puede mover players "sin grupo" (no están en su alcance); solo el administrator los asigna. Confirmar con la persona responsable. |
+| `ownerIds` | Solo el administrator los cambia (el moderator que crea un grupo queda dueño). Un grupo sin dueño lo maneja solo el administrator. |
+| Panel: virtualización | No se virtualizan las columnas del tablero de Grupos (cada una trae hasta 100 jugadores y avisa si hay más). Falta paginar "Sin grupo" y virtualizar cuando haya cientos. |
+| Panel: validadores | Los validadores de `@patio/contracts` usan ajv (necesita eval) y no pueden correr con la CSP. Hace falta una versión precompilada (standalone) para los formularios de mecánicas. |
+| Panel: mapa de calor | "Logro por desafío y día" es una tabla de conteos; falta el mapa de calor con celdas sombreadas (tokens `seq-*`). |
+| Panel: vistas pendientes del resumen | Faltan "tiempo en resolver" por día y la evolución del jugador en gráfico (hoy es tabla). |
+| Panel: arrastre | Sin `DragOverlay`: la tarjeta se mueve con transform y puede quedar cortada por el contenedor con scroll horizontal. Las flechas arriba y abajo no hacen nada en el teclado (solo cambian de columna). |
+| Panel: favicon | `favicon.ico` da 404 (sin ícono definido). |
+| Panel: tamaño | El bundle inicial pesa unos 625 kB (sin medir en producción); falta dividir por rutas el resto. |
+| Panel: arrastre en Días | Agregar y ordenar desafíos del set es con botones, sin arrastre (falta `@dnd-kit/sortable`). Confirmar si hace falta arrastrar de la biblioteca al día. |
+| Panel: catálogo de assets | Lista local de 12 ids de ejemplo hasta que exista `packages/assets` con manifiesto; el servidor tampoco valida que el `assetId` exista. |
+| Panel: vista previa de desafíos | No hay vista previa del desafío en el editor (deseable en doc 06; falta `packages/challenges`). |
+| Panel: invitaciones pendientes | No hay `GET /accounts/invitations`, así que Cuentas muestra solo la última invitación enviada en la sesión (con el enlace solo en development). Falta endpoint para listar, reenviar y revocar. |
+| Panel: zona horaria | Doc 06 la lista entre las reglas, pero la API no la expone (`PanelRules` no la trae). La pantalla la nombra como dato del servidor, sin campo. |
+| Panel: biblioteca de Días | La biblioteca para armar el set trae hasta 100 desafíos activos, con búsqueda local por texto. Falta paginar o buscar en el servidor. |
+| Panel: validación de formularios | Los límites de los schemas están repetidos a mano en `challenge-form.ts`, `rules-form.ts` y los formularios de Cuentas (sigue pendiente la versión precompilada de los validadores). |
+| Panel: autor eliminado | La lista de Desafíos dice "Otra persona" para cualquier autor ajeno, incluida una cuenta eliminada. |
+

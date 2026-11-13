@@ -16,7 +16,7 @@ Sin definir qué audio hay (música, efectos, lectura de la consigna). Decisión
 
 ## Fuentes tipográficas
 
-Autoalojadas, sin CDN. Familia del prototipo: Lexend (propuesta; Atkinson Hyperlegible queda como alternativa). Confirmar licencia OFL antes de incluir. La librería de i18n también registra licencia y telemetría (pendiente). Subconjunto de caracteres para español (incluye ñ, tildes, ¿ ¡) y `font-display: swap`.
+Autoalojadas, sin CDN. Familia del prototipo: Lexend (propuesta; Atkinson Hyperlegible queda como alternativa). Licencia OFL-1.1 confirmada en npm (`@fontsource/lexend` 5.3.0, 2026-11-12). i18n del panel: `i18next` y `react-i18next`, MIT, sin telemetría declarada. Subconjunto de caracteres para español (incluye ñ, tildes, ¿ ¡) y `font-display: swap`.
 
 ## Íconos
 

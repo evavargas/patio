@@ -48,22 +48,25 @@ documentation/ (fuera del repo o enlazada) los .docx originales
 | --- | --- | --- |
 | `auth` | Herramientas puras sin base de datos: argon2id, firmar y verificar JWT, generar tokens y códigos, SHA-256, HMAC. | ninguno |
 | `players` | Alta, recuperación, apodo, contadores del jugador y guard por token del jugador. | auth, word-filter |
-| `groups` | Grupos y códigos. Incluye el servicio de alcance (qué grupos ve una cuenta). | ninguno |
+| `groups` | Grupos y códigos. Incluye el servicio de alcance (qué grupos ve una cuenta: `scopeFor`, `GroupScope`). | auth (alfabeto de códigos) |
 | `membership` | Todo lo que toca jugador y grupo a la vez: registro con código, unirse, mover, historial, máximo, efecto de borrar un grupo. | players, groups |
 | `challenges` | Biblioteca de desafíos, autoría, versiones. | contracts |
 | `day-sets` | Set por grupo y fecha: borrador, publicación, bloqueo, resolución del set de un jugador. | challenges, groups |
 | `results` | Registro de logros, idempotencia, puntos. | players, day-sets, rules |
 | `rules` | Puntos por dificultad, reglas de nivel, zona horaria, tolerancia. Cálculo de nivel = función pura. | ninguno |
 | `word-filter` | Lista de palabras prohibidas y validación de apodos. | ninguno |
-| `stats` | Cierre diario perezoso, consultas del panel, rankings. | results, groups, players |
+| `stats` | Consultas del panel y rankings (hoy agregaciones directas sobre `players`, `results` y `dayAccess`; el cierre diario perezoso llega después). | groups (alcance; lee las colecciones por `database`) |
+| `panel` | Superficie HTTP `/v1/panel/*` (menos `auth`, que vive en `accounts`): controladores delgados, `DeletionsService` y la composición grupos + players. | accounts, groups, players, membership, challenges, day-sets, results, rules, word-filter, stats |
 | `accounts` | Cuentas del panel: login, refresh rotativo, cambio de contraseña, guard del panel. | auth |
 | `platform` | Configuración, reloj, errores, logs, health. | ninguno |
 | `rate-limit` | Límites por IP: contadores en `rateLimits` con incremento atómico y TTL. Transversal como `platform`: lo usan registro, recuperación y login. Sale de `platform` porque necesita MongoDB y `platform` no puede importar de `database` sin ciclo. | database, platform |
 | `database` | Conexión a MongoDB (una por instancia), cierre ordenado. Transversal como `platform`: cualquier módulo con repositorio lo importa; solo importa de `platform`. | ninguno |
 
+Cambios del 2026-11-12 (panel completo): `groups` pasa a depender de `auth` (genera el código con el alfabeto único); nace `panel`, que nadie importa; `accounts` ganó cuentas e invitaciones pero sigue dependiendo solo de `auth` (quitar a un moderator de `ownerIds` lo orquesta `panel`). `stats` usa el alcance de `groups` y lee las colecciones directo.
+
 `GET /v1/day` y `POST /v1/results` viven en `results` (usa players, day-sets y rules): `GET /v1/day` necesita el guard y el grupo del player y el set, y `day-sets` no puede importar `players`. `rules` expone también la función pura del nivel (`computeLevel`).
 
-`auth` son funciones puras exportadas (sin módulo de Nest, sin controlador). El registro `POST /v1/players` vive en `membership` porque toca jugador y grupo: usa `players` (apodo, credenciales, alta) y `groups` (leer el código); `membership` no importa `auth` ni `word-filter` directamente.
+`auth` son funciones puras exportadas (sin módulo de Nest, sin controlador): hoy credenciales de player, `hashPassword`/`verifyPassword` (argon2id con `node:crypto`) y `signJwt`/`verifyJwt` (HS256). `accounts` implementa la autenticación del panel (`/v1/panel/auth/*`, `PanelGuard`, comando del primer administrator); usa `auth`, `database`, `rate-limit` y `platform`. No cambió el mapa. El registro `POST /v1/players` vive en `membership` porque toca jugador y grupo: usa `players` (apodo, credenciales, alta) y `groups` (leer el código); `membership` no importa `auth` ni `word-filter` directamente.
 
 Dentro de cada módulo: controlador (HTTP + validación con el schema) -> servicio (reglas) -> repositorio (MongoDB). Funciones puras con pruebas propias: cálculo de nivel, normalización de apodos, resolución del set del día.
 
