@@ -1,0 +1,24 @@
+@import "@patio/theme/fonts.css";
+@import "tailwindcss";
+@import "@patio/theme/tokens.css";
+@import "@patio/theme/tailwind.css";
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: var(--leading-normal);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}
