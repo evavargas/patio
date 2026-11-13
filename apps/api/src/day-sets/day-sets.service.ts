@@ -1,7 +1,13 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { DayKey } from "@patio/contracts";
+import { randomUUID } from "node:crypto";
+import { ChallengesService } from "../challenges/challenges.service.ts";
+import type { GroupScope } from "../groups/group-scope.ts";
+import { GroupsService } from "../groups/groups.service.ts";
 import { Clock } from "../platform/clock.ts";
-import { type DayAccessDoc, type DaySetDoc, DaySetsRepository } from "./day-sets.repository.ts";
+import { DomainException } from "../platform/domain.exception.ts";
+import { challengeIdOf } from "../platform/ids.ts";
+import { type DayAccessDoc, type DaySetDoc, DaySetsRepository, type StoredItem } from "./day-sets.repository.ts";
 
 export interface ResolvedDay {
   date: DayKey;
@@ -14,6 +20,8 @@ export class DaySetsService {
   constructor(
     @Inject(Clock) private readonly clock: Clock,
     @Inject(DaySetsRepository) private readonly repository: DaySetsRepository,
+    @Inject(ChallengesService) private readonly challenges: Pick<ChallengesService, "findActive" | "assertExist">,
+    @Inject(GroupsService) private readonly groups: Pick<GroupsService, "get">,
   ) {}
 
   /**
@@ -59,5 +67,102 @@ export class DaySetsService {
       if (own !== null) return own;
     }
     return this.repository.lockPublished(date, null, now);
+  }
+
+  // ---- Panel ----
+
+  /** Sets de un rango de fechas dentro del alcance. `groupId` filtra un grupo ("general" = el set general). 1 lectura. */
+  list(scope: GroupScope, from: DayKey, to: DayKey, groupId?: string | "general"): Promise<DaySetDoc[]> {
+    const own = groupId === undefined ? {} : { groupId: groupId === "general" ? null : groupId };
+    return this.repository.list({ $and: [scope.filter("groupId"), own] }, from, to);
+  }
+
+  /** FORBIDDEN_SCOPE si el set no es de un grupo permitido; DAY_SET_NOT_FOUND si no existe. 1 lectura. */
+  async get(scope: GroupScope, id: string): Promise<DaySetDoc> {
+    const set = await this.repository.findSet(id);
+    if (set === null) throw new DomainException("DAY_SET_NOT_FOUND", 404);
+    if (!scope.allows(set.groupId)) throw new DomainException("FORBIDDEN_SCOPE", 403);
+    return set;
+  }
+
+  /**
+   * PUT: guarda el borrador de (fecha, grupo). Solo con `lockedAt` vacio (SET_LOCKED). Un set publicado y sin bloquear que se
+   * edita vuelve a borrador: hay que publicarlo otra vez (propuesta: asi nunca se sirve algo distinto de lo guardado). No se aceptan
+   * fechas pasadas. Operaciones: 4 (grupo, desafios, set, escritura).
+   */
+  async saveDraft(scope: GroupScope, date: DayKey, groupId: string | null, challengeIds: string[]): Promise<DaySetDoc> {
+    if (!scope.allows(groupId)) throw new DomainException("FORBIDDEN_SCOPE", 403);
+    if (date < this.clock.today()) throw new DomainException("VALIDATION_FAILED", 400);
+    if (groupId !== null) await this.groups.get(scope, groupId);
+    await this.challenges.assertExist(challengeIds);
+    const existing = await this.repository.findByKey(date, groupId);
+    if (existing === null) {
+      const doc: DaySetDoc = { _id: randomUUID(), date, groupId, status: "draft", items: [], challengeIds, timezone: this.clock.timeZone };
+      if (await this.repository.insertDraft(doc)) return doc;
+      // Otro pedido lo creo en el medio: se edita ese.
+      const winner = await this.repository.findByKey(date, groupId);
+      return this.updateDraft(winner?._id ?? doc._id, challengeIds);
+    }
+    return this.updateDraft(existing._id, challengeIds);
+  }
+
+  /** Copia los desafios a `items` (los cambios posteriores del desafio no afectan al set). Sin desafios no se publica. 3 operaciones. */
+  async publish(scope: GroupScope, id: string): Promise<DaySetDoc> {
+    const set = await this.get(scope, id);
+    if (set.lockedAt != null) throw new DomainException("SET_LOCKED", 409);
+    const ids = set.challengeIds ?? [];
+    if (ids.length === 0) throw new DomainException("VALIDATION_FAILED", 400);
+    const items: StoredItem[] = (await this.challenges.findActive(ids)).map((c) => ({
+      challengeId: challengeIdOf(c._id),
+      text: c.text,
+      mechanic: c.mechanic,
+      difficulty: c.difficulty,
+      assets: c.assets,
+      version: c.version,
+      ...(c.points === undefined ? {} : { points: c.points }),
+      ...(c.family === undefined ? {} : { family: c.family }),
+    }));
+    return this.orLocked(await this.repository.publish(id, items));
+  }
+
+  /** 2 operaciones. */
+  async unpublish(scope: GroupScope, id: string): Promise<DaySetDoc> {
+    await this.get(scope, id);
+    return this.orLocked(await this.repository.unpublish(id));
+  }
+
+  /** Cuantos players ya abrieron el set (solo administrator, lo exige quien llama). */
+  countAccess(id: string): Promise<number> {
+    return this.repository.countAccess(id);
+  }
+
+  deleteSet(id: string): Promise<void> {
+    return this.repository.deleteSet(id);
+  }
+
+  deleteByGroup(groupId: string): Promise<void> {
+    return this.repository.deleteByGroup(groupId);
+  }
+
+  countSetsByGroup(groupId: string): Promise<number> {
+    return this.repository.countSetsByGroup(groupId);
+  }
+
+  deleteAccessByPlayer(playerId: string): Promise<void> {
+    return this.repository.deleteAccessByPlayer(playerId);
+  }
+
+  countAccessByPlayer(playerId: string): Promise<number> {
+    return this.repository.countAccessByPlayer(playerId);
+  }
+
+  private async updateDraft(id: string, challengeIds: string[]): Promise<DaySetDoc> {
+    return this.orLocked(await this.repository.saveDraft(id, challengeIds));
+  }
+
+  /** Las escrituras condicionales devuelven null si `lockedAt` ya no esta vacio. */
+  private orLocked(set: DaySetDoc | null): DaySetDoc {
+    if (set === null) throw new DomainException("SET_LOCKED", 409);
+    return set;
   }
 }

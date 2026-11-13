@@ -1,5 +1,6 @@
 import { Inject, Injectable, type OnModuleInit } from "@nestjs/common";
 import type { DayItem } from "@patio/contracts";
+import type { Filter } from "mongodb";
 import { DatabaseService } from "../database/database.service.ts";
 
 /** Copia del desafio al publicar (doc 04). `version` y el resto de lo guardado no salen a `/v1`. */
@@ -12,6 +13,8 @@ export interface DaySetDoc {
   groupId: string | null;
   status: "draft" | "published";
   items: StoredItem[];
+  /** Lista del borrador (propuesta): `items` solo se llena al publicar. */
+  challengeIds?: string[];
   lockedAt?: Date | null;
   timezone: string;
 }
@@ -74,5 +77,73 @@ export class DaySetsRepository implements OnModuleInit {
   /** 1 escritura. Idempotente: apunta el acceso al set nuevo (el anterior fue eliminado). */
   async repointAccess(playerId: string, date: string, daySetId: string, groupId: string | null): Promise<void> {
     await this.access.updateOne({ playerId, date }, { $set: { daySetId, groupId } });
+  }
+
+  // ---- Panel ----
+
+  /** 1 lectura por {date, groupId}. `filter` incluye el alcance. */
+  list(filter: Filter<DaySetDoc>, from: string, to: string): Promise<DaySetDoc[]> {
+    return this.sets.find({ $and: [filter, { date: { $gte: from, $lte: to } }] }).sort({ date: 1, groupId: 1 }).limit(500).toArray();
+  }
+
+  /** 1 lectura por el indice unico. */
+  findByKey(date: string, groupId: string | null): Promise<DaySetDoc | null> {
+    return this.sets.findOne({ date, groupId });
+  }
+
+  /** 1 escritura. false si ya existe un set para (fecha, grupo). */
+  async insertDraft(doc: DaySetDoc): Promise<boolean> {
+    try {
+      await this.sets.insertOne(doc);
+      return true;
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === 11000) return false;
+      throw error;
+    }
+  }
+
+  /** 1 escritura atomica, SOLO si `lockedAt` esta vacio. null = bloqueado o inexistente. Vuelve a borrador. */
+  saveDraft(id: string, challengeIds: string[]): Promise<DaySetDoc | null> {
+    return this.sets.findOneAndUpdate({ _id: id, lockedAt: null }, { $set: { challengeIds, status: "draft", items: [] } }, { returnDocument: "after" });
+  }
+
+  /** 1 escritura atomica, SOLO si `lockedAt` esta vacio. */
+  publish(id: string, items: StoredItem[]): Promise<DaySetDoc | null> {
+    return this.sets.findOneAndUpdate({ _id: id, lockedAt: null }, { $set: { status: "published", items } }, { returnDocument: "after" });
+  }
+
+  /** 1 escritura atomica, SOLO si `lockedAt` esta vacio. */
+  unpublish(id: string): Promise<DaySetDoc | null> {
+    return this.sets.findOneAndUpdate({ _id: id, lockedAt: null }, { $set: { status: "draft", items: [] } }, { returnDocument: "after" });
+  }
+
+  /** 1 escritura. Idempotente. */
+  async deleteSet(id: string): Promise<void> {
+    await this.sets.deleteOne({ _id: id });
+  }
+
+  /** 1 escritura: efecto de borrar un grupo. */
+  async deleteByGroup(groupId: string): Promise<void> {
+    await this.sets.deleteMany({ groupId });
+  }
+
+  /** 1 lectura: cuantos players ya abrieron el set. */
+  countAccess(daySetId: string): Promise<number> {
+    return this.access.countDocuments({ daySetId });
+  }
+
+  /** 1 lectura. */
+  countSetsByGroup(groupId: string): Promise<number> {
+    return this.sets.countDocuments({ groupId });
+  }
+
+  /** 1 escritura: efecto de borrar un player. */
+  async deleteAccessByPlayer(playerId: string): Promise<void> {
+    await this.access.deleteMany({ playerId });
+  }
+
+  /** 1 lectura. */
+  countAccessByPlayer(playerId: string): Promise<number> {
+    return this.access.countDocuments({ playerId });
   }
 }

@@ -23,4 +23,9 @@ export class RulesRepository {
   find(): Promise<RulesDoc | null> {
     return this.collection.findOne({ _id: "rules" });
   }
+
+  /** 1 escritura (upsert). */
+  async replace(rules: Omit<RulesDoc, "_id">): Promise<void> {
+    await this.collection.updateOne({ _id: "rules" }, { $set: rules }, { upsert: true });
+  }
 }

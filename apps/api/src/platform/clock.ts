@@ -5,10 +5,20 @@ const MS_PER_DAY = 86_400_000;
 
 /** Unica fuente de la hora del back. Las pruebas la reemplazan con una subclase. Tambien concentra la aritmetica de fechas. */
 export class Clock {
-  constructor(private readonly timeZone: string) {}
+  constructor(private readonly zone: string) {}
+
+  /** Zona horaria configurada (para guardarla junto al set). */
+  get timeZone(): string {
+    return this.zone;
+  }
 
   now(): Date {
     return new Date();
+  }
+
+  /** Instante a partir de segundos Unix (los de `iat` y `exp` de un token). */
+  fromEpochSeconds(seconds: number): Date {
+    return new Date(seconds * 1000);
   }
 
   /** Milisegundos monotonicos para medir duraciones (no es hora de pared). */
@@ -35,7 +45,7 @@ export class Clock {
   /** Dia calendario en la zona configurada. */
   today(): DayKey {
     // en-CA formatea YYYY-MM-DD
-    return this.dayKey(new Intl.DateTimeFormat("en-CA", { timeZone: this.timeZone }).format(this.now()));
+    return this.dayKey(new Intl.DateTimeFormat("en-CA", { timeZone: this.zone }).format(this.now()));
   }
 
   nextDay(day: DayKey): DayKey {
@@ -44,6 +54,15 @@ export class Clock {
 
   previousDay(day: DayKey): DayKey {
     return this.shiftDay(day, -1);
+  }
+
+  /** Dias de calendario entre dos claves (b - a). */
+  daysBetween(a: DayKey, b: DayKey): number {
+    const ms = (day: DayKey): number => {
+      const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
+      return Date.UTC(year, month - 1, date);
+    };
+    return Math.round((ms(b) - ms(a)) / MS_PER_DAY);
   }
 
   /** Instante en que empieza `day` (00:00 local) en la zona configurada. */
@@ -69,7 +88,7 @@ export class Clock {
   /** Desfase de la zona respecto de UTC en `instantMs` (positivo al este de Greenwich). */
   private offsetMs(instantMs: number): number {
     const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: this.timeZone,
+      timeZone: this.zone,
       hourCycle: "h23",
       year: "numeric",
       month: "numeric",

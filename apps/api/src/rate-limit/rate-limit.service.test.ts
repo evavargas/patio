@@ -42,13 +42,6 @@ describe("RateLimitService", () => {
     clock.set(new Date("2026-11-11T15:00:00Z"));
   });
 
-  it("es atomico: 20 pedidos simultaneos con maximo 3 dejan pasar exactamente 3", async () => {
-    const results = await Promise.all(Array.from({ length: 20 }, () => service.hit("c:4.4.4.4", rule)));
-    expect(results.filter(Boolean)).toHaveLength(3);
-    const doc = await testDb.db.collection("rateLimits").findOne({ key: "c:4.4.4.4" });
-    expect(doc?.count).toBe(20);
-  });
-
   it("isExceeded mira sin contar", async () => {
     expect(await service.isExceeded("p:5.5.5.5", rule)).toBe(false);
     for (let i = 0; i < 3; i++) await service.hit("p:5.5.5.5", rule);

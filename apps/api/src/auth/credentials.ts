@@ -4,6 +4,7 @@ import { ALPHABET } from "./alphabet.ts";
 
 const PLAYER_ID_LENGTH = 12;
 const RECOVERY_CODE_LENGTH = 8;
+const GROUP_CODE_LENGTH = 6;
 const TOKEN_BYTES = 32;
 
 // randomInt rechaza valores para no sesgar el resultado (31 no divide a 2^n).
@@ -15,6 +16,8 @@ export function generatePlayerId(): PlayerId {
   if (!isPlayerId(id)) throw new Error("ID generado fuera del contrato");
   return id;
 }
+
+export const generateGroupCode = (): string => randomSymbols(GROUP_CODE_LENGTH);
 
 export const generateRecoveryCode = (): string => randomSymbols(RECOVERY_CODE_LENGTH);
 

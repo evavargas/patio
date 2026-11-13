@@ -14,5 +14,6 @@ import { ResultsService } from "./results.service.ts";
   imports: [DatabaseModule, PlayersModule, DaySetsModule, RulesModule],
   controllers: [DayController, ResultsController],
   providers: [DayService, ResultsService, ResultsRepository],
+  exports: [ResultsService],
 })
 export class ResultsModule {}

@@ -20,4 +20,10 @@ export class BannedWordsRepository {
   find(): Promise<BannedWordsDoc | null> {
     return this.settings.findOne({ _id: "bannedWords" });
   }
+
+  /** 1 escritura atomica (upsert): reemplaza la lista y sube la version. */
+  async replace(words: string[]): Promise<BannedWordsDoc> {
+    const doc = await this.settings.findOneAndUpdate({ _id: "bannedWords" }, { $set: { words }, $inc: { version: 1 } }, { upsert: true, returnDocument: "after" });
+    return doc ?? { _id: "bannedWords", version: 1, words };
+  }
 }

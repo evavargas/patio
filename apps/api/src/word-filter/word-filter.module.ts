@@ -9,6 +9,6 @@ import { NicknameService } from "./nickname.service.ts";
   imports: [DatabaseModule],
   controllers: [BannedWordsController],
   providers: [BannedWordsService, BannedWordsRepository, NicknameService],
-  exports: [NicknameService],
+  exports: [NicknameService, BannedWordsService],
 })
 export class WordFilterModule {}

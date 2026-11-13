@@ -70,4 +70,21 @@ export class ResultsRepository implements OnModuleInit {
     const docs = await this.collection.find({ playerId, daySetId }, { projection: { challengeId: 1 } }).toArray();
     return docs.map((d) => d.challengeId);
   }
+
+  /** 1 escritura. Efecto de borrar un player. Idempotente. */
+  async deleteByPlayer(playerId: string): Promise<void> {
+    await this.collection.deleteMany({ playerId });
+  }
+
+  /** 1 lectura. */
+  countByPlayer(playerId: string): Promise<number> {
+    return this.collection.countDocuments({ playerId });
+  }
+
+  /** 1 lectura: logros de un player por dia en un rango. */
+  achievedByDay(playerId: string, from: string, to: string): Promise<{ date: string; achieved: number }[]> {
+    return this.collection
+      .aggregate<{ date: string; achieved: number }>([{ $match: { playerId, date: { $gte: from, $lte: to } } }, { $group: { _id: "$date", achieved: { $sum: 1 } } }, { $project: { _id: 0, date: "$_id", achieved: 1 } }, { $sort: { date: 1 } }])
+      .toArray();
+  }
 }

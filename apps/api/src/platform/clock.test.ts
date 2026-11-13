@@ -46,6 +46,10 @@ describe("Clock", () => {
     expect(clock.addMinutes(clock.now(), 30).toISOString()).toBe("2026-11-11T15:30:00.000Z");
   });
 
+  it("fromEpochSeconds convierte segundos Unix", () => {
+    expect(new Clock("UTC").fromEpochSeconds(1_794_409_200).toISOString()).toBe("2026-11-11T15:00:00.000Z");
+  });
+
   it("nadie mas que clock.ts lee la hora del sistema", () => {
     const root = join(import.meta.dirname, "..");
     const files = readdirSync(root, { recursive: true, encoding: "utf8" }).filter(

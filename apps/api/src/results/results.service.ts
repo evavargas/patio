@@ -90,4 +90,16 @@ export class ResultsService {
     await this.repository.markApplied(doc._id);
     return { score: progress.score, pointsEarned: doc.points };
   }
+
+  deleteByPlayer(playerId: string): Promise<void> {
+    return this.repository.deleteByPlayer(playerId);
+  }
+
+  countByPlayer(playerId: string): Promise<number> {
+    return this.repository.countByPlayer(playerId);
+  }
+
+  achievedByDay(playerId: string, from: string, to: string): Promise<{ date: string; achieved: number }[]> {
+    return this.repository.achievedByDay(playerId, from, to);
+  }
 }

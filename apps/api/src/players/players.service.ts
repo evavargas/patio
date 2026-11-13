@@ -1,12 +1,13 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { type PlayerId, type RecoverPlayerResponse, isPlayerId, isPlayerToken, isRecoverPlayerRequest } from "@patio/contracts";
 import { timingSafeEqual } from "node:crypto";
+import type { Filter } from "mongodb";
 import { generatePlayerId, generateRecoveryCode, generateToken, hashRecoveryCode, hashToken } from "../auth/credentials.ts";
 import { RateLimitService } from "../rate-limit/rate-limit.service.ts";
 import { type AppConfig, CONFIG } from "../platform/config.ts";
 import { DomainException } from "../platform/domain.exception.ts";
 import { NicknameService } from "../word-filter/nickname.service.ts";
-import { type PlayerDoc, PlayersRepository } from "./players.repository.ts";
+import { type PlayerDoc, type PlayerPanelDoc, PlayersRepository } from "./players.repository.ts";
 
 /** Credenciales nuevas: lo que va al player (token y codigo, UNA vez) y lo que se guarda (solo hashes). */
 export interface NewIdentity {
@@ -53,7 +54,7 @@ export class PlayersService {
     @Inject(NicknameService) private readonly nicknames: Pick<NicknameService, "check">,
     @Inject(RateLimitService) private readonly rateLimit: Pick<RateLimitService, "hit">,
     @Inject(PlayersRepository)
-    private readonly repository: Pick<PlayersRepository, "insert" | "delete" | "countInGroup" | "findByTokenHash" | "replaceTokenByRecoveryHash" | "touch" | "addResult" | "raiseLevel">,
+    private readonly repository: Pick<PlayersRepository, "insert" | "delete" | "countInGroup" | "findByTokenHash" | "replaceTokenByRecoveryHash" | "touch" | "addResult" | "raiseLevel" | "listPanel" | "findPanel" | "findGroups" | "setNickname" | "setRecoveryHash" | "setGroup" | "clearGroup" | "countByGroup">,
   ) {}
 
   /** Apodo recortado, o NICKNAME_NOT_ALLOWED sin decir por que. */
@@ -148,5 +149,54 @@ export class PlayersService {
     if (player === null) throw new DomainException("RECOVERY_CODE_INVALID", 404);
     if (!isPlayerId(player._id)) throw new Error("ID guardado fuera del contrato");
     return { playerId: player._id, token, nickname: player.nickname };
+  }
+
+  // ---- Panel (el alcance lo aplica quien llama: `filter` ya lo incluye) ----
+
+  /** Una pagina de players. `limit` entre 1 y 100. El cursor es el ultimo `_id`. 1 lectura. */
+  async listForPanel(filter: Filter<PlayerDoc>, cursor: string | undefined, limit: number): Promise<{ items: PlayerPanelDoc[]; nextCursor: string | null }> {
+    const rows = await this.repository.listPanel(filter, cursor, limit);
+    const items = rows.slice(0, limit);
+    return { items, nextCursor: rows.length > limit ? (items.at(-1)?._id ?? null) : null };
+  }
+
+  /** PLAYER_NOT_FOUND si no existe. 1 lectura. */
+  async getForPanel(id: string): Promise<PlayerPanelDoc> {
+    const doc = await this.repository.findPanel(id);
+    if (doc === null) throw new DomainException("PLAYER_NOT_FOUND", 404);
+    return doc;
+  }
+
+  /** Grupo actual de varios players; PLAYER_NOT_FOUND si falta alguno. 1 lectura. */
+  async groupsOf(ids: string[]): Promise<Map<string, string | null>> {
+    const rows = await this.repository.findGroups(ids);
+    if (rows.length !== ids.length) throw new DomainException("PLAYER_NOT_FOUND", 404);
+    return new Map(rows.map((r) => [r._id, r.groupId]));
+  }
+
+  /** Cambio de apodo por el administrator: pasa por el mismo filtro que el registro. 2 operaciones. */
+  async changeNickname(id: string, nickname: string): Promise<void> {
+    const clean = await this.validateNickname(nickname);
+    await this.getForPanel(id);
+    await this.repository.setNickname(id, clean);
+  }
+
+  /** Codigo nuevo: el viejo deja de servir, el token en uso sigue. Devuelve el codigo UNA vez. 1 escritura. */
+  async reissueRecovery(id: string): Promise<string> {
+    const recoveryCode = generateRecoveryCode();
+    if (!(await this.repository.setRecoveryHash(id, hashRecoveryCode(recoveryCode, this.config.recoveryHmacSecret)))) throw new DomainException("PLAYER_NOT_FOUND", 404);
+    return recoveryCode;
+  }
+
+  setGroup(ids: string[], groupId: string | null): Promise<void> {
+    return this.repository.setGroup(ids, groupId);
+  }
+
+  clearGroup(groupId: string): Promise<void> {
+    return this.repository.clearGroup(groupId);
+  }
+
+  countByGroup(groupIds: readonly string[] | null): Promise<Record<string, number>> {
+    return this.repository.countByGroup(groupIds);
   }
 }

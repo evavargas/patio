@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { BannedWordsDoc } from "./banned-words.repository.ts";
 import { BannedWordsService } from "./banned-words.service.ts";
 
-const serviceWith = (doc: BannedWordsDoc | null) => new BannedWordsService({ find: () => Promise.resolve(doc) });
+const serviceWith = (doc: BannedWordsDoc | null) => new BannedWordsService({ find: () => Promise.resolve(doc), replace: () => Promise.reject(new Error("no se usa")) });
 
 describe("BannedWordsService", () => {
   it("sin documento responde version 0 y lista vacia", async () => {

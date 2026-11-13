@@ -8,8 +8,10 @@
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
+    "create-admin": "pnpm build && node dist/accounts/create-admin.js",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed": "pnpm build && NODE_ENV=development node dist/seed/seed.js"
   },
   "dependencies": {
     "@nestjs/common": "12.4.2",
@@ -17,6 +19,7 @@
     "@nestjs/platform-express": "12.4.2",
     "@patio/contracts": "workspace:*",
     "mongodb": "7.8.0",
+    "nodemailer": "10.5.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2"
   },
@@ -24,6 +27,7 @@
     "@nestjs/testing": "12.4.2",
     "@types/express": "5.0.6",
     "@types/node": "24.19.2",
+    "@types/nodemailer": "8.0.2",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   }

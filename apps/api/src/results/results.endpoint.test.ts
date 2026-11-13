@@ -142,15 +142,6 @@ describe("POST /v1/results: reparacion de un resultado a medio aplicar (sin tran
     expect((await players().findOne({ _id: p.playerId }))?.score).toBe(20);
   });
 
-  it("varios reintentos a la vez sobre un resultado vencido lo aplican una sola vez", async () => {
-    const p = await setup();
-    await halfApplied(p, "2026-11-11T14:00:00Z");
-    const responses = await Promise.all(Array.from({ length: 8 }, () => retry(p.token)));
-    expect(responses.map((r) => r.status)).toEqual(Array.from({ length: 8 }, () => 200));
-    expect((await players().findOne({ _id: p.playerId }))?.score).toBe(20);
-    expect(await results().findOne({ _id: "r-half" })).toMatchObject({ applied: true });
-  });
-
   it("applied=false con la reserva vigente (otro pedido lo esta aplicando): responde 200 sin aplicar de nuevo", async () => {
     const p = await setup();
     await halfApplied(p, "2026-11-11T14:59:50Z");

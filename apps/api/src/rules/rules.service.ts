@@ -13,7 +13,7 @@ export const DEFAULT_MIDNIGHT_TOLERANCE_MINUTES = 30;
 
 @Injectable()
 export class RulesService {
-  constructor(@Inject(RulesRepository) private readonly repository: Pick<RulesRepository, "find">) {}
+  constructor(@Inject(RulesRepository) private readonly repository: Pick<RulesRepository, "find" | "replace">) {}
 
   /** 1 lectura. Sin documento: sin puntos por dificultad, sin niveles y tolerancia por defecto (propuesta, ver open-questions). */
   async get(): Promise<Rules> {
@@ -23,5 +23,11 @@ export class RulesService {
       levels: doc?.levels ?? [],
       midnightToleranceMinutes: doc?.midnightToleranceMinutes ?? DEFAULT_MIDNIGHT_TOLERANCE_MINUTES,
     };
+  }
+
+  /** PUT del panel (solo administrator, lo exige el controlador). 1 escritura. Lo ya jugado no se recalcula. */
+  async replace(rules: Rules): Promise<Rules> {
+    await this.repository.replace(rules);
+    return rules;
   }
 }

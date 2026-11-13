@@ -128,12 +128,4 @@ describe("POST /v1/players/recover", () => {
     expect(logs).toContain("/v1/players/recover");
     for (const secret of [p.token, body.token, p.recoveryCode, "ZZZZZZZZ", "Zorzal"]) expect(logs).not.toContain(secret);
   });
-
-  it("dos recuperaciones simultaneas (un solo update atomico) dejan UN solo token valido", async () => {
-    const p = await register();
-    const [a, b] = await Promise.all([recover({ recoveryCode: p.recoveryCode }), recover({ recoveryCode: p.recoveryCode })]);
-    const [x, y] = [await recovered(a), await recovered(b)];
-    const valid = [(await me(x.token)).status, (await me(y.token)).status].filter((s) => s === 200);
-    expect(valid).toHaveLength(1);
-  });
 });

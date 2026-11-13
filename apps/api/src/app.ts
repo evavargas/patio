@@ -28,6 +28,8 @@ export function configureApp(app: NestExpressApplication, config: AppConfig): vo
     const startedAt = clock.monotonicMs();
     const requestId = randomUUID();
     res.setHeader("X-Request-Id", requestId);
+    // Todo el panel lleva datos de personas o credenciales: ni proxies ni navegador lo guardan.
+    if (req.originalUrl.startsWith("/v1/panel/")) res.setHeader("Cache-Control", "private, no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("Referrer-Policy", "no-referrer");
     res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");

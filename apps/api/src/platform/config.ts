@@ -11,13 +11,23 @@ export interface AppConfig {
   mongoDb: string;
   /** Secreto del HMAC de los codigos de recuperacion. Nunca se imprime ni se loguea. */
   recoveryHmacSecret: string;
+  /** Secreto de firma de los access tokens del panel (HS256). Nunca se imprime ni se loguea. */
+  jwtSecret: string;
   /** Saltos de proxy en los que se confia para leer la IP en X-Forwarded-For. 0 = ninguno. */
   trustProxyHops: number;
-  limits: { register: RateRule; groupCode: RateRule; recover: RateRule };
+  /** Correo de invitacion (Gmail SMTP). null = sin SMTP: el envio se omite (solo permitido en development/test). */
+  mail: { host: string; port: number; user: string; password: string; from: string } | null;
+  /** Origen del panel, para armar el enlace de invitacion. */
+  panelUrl: string;
+  /** El enlace de invitacion viaja en la respuesta SOLO con NODE_ENV=development. */
+  exposeInvitationLink: boolean;
+  limits: { register: RateRule; groupCode: RateRule; recover: RateRule; login: RateRule };
 }
 
 /** Valor SOLO para desarrollo y pruebas, claramente falso: no protege nada. */
 export const DEV_RECOVERY_HMAC_SECRET = "dev-only-INSECURE-recovery-hmac-secret-not-for-production";
+/** Valor SOLO para desarrollo y pruebas, claramente falso: no protege nada. */
+export const DEV_JWT_SECRET = "dev-only-INSECURE-jwt-secret-not-for-production-use";
 const MIN_SECRET_LENGTH = 32;
 
 export const CONFIG = Symbol("CONFIG");
@@ -66,6 +76,10 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
   const recoveryHmacSecret = env.RECOVERY_HMAC_SECRET ?? (isLocal ? DEV_RECOVERY_HMAC_SECRET : "");
   if (recoveryHmacSecret.length < MIN_SECRET_LENGTH) invalid.push("RECOVERY_HMAC_SECRET");
 
+  const jwtSecret = env.JWT_SECRET ?? (isLocal ? DEV_JWT_SECRET : "");
+  // Un solo secreto para dos usos le quita aislamiento a cada uno.
+  if (jwtSecret.length < MIN_SECRET_LENGTH || jwtSecret === recoveryHmacSecret) invalid.push("JWT_SECRET");
+
   const trustProxyHops = Number(env.TRUST_PROXY_HOPS ?? "0");
   if (!/^[0-5]$/.test(env.TRUST_PROXY_HOPS ?? "0")) invalid.push("TRUST_PROXY_HOPS");
 
@@ -88,8 +102,25 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
       max: positiveInt("RATE_LIMIT_RECOVER_MAX", 100),
       windowSeconds: positiveInt("RATE_LIMIT_RECOVER_WINDOW_SECONDS", 3600),
     },
+    // Doc 03: login del panel 10 por 15 min, por IP y correo (sin medir).
+    login: {
+      max: positiveInt("RATE_LIMIT_LOGIN_MAX", 10),
+      windowSeconds: positiveInt("RATE_LIMIT_LOGIN_WINDOW_SECONDS", 900),
+    },
   };
 
+  // Correo de invitacion: en produccion todo es obligatorio; en development/test, sin SMTP el envio se omite.
+  const panelUrl = env.PANEL_URL ?? (isLocal ? "http://localhost:5173" : "");
+  if (!isExactOrigin(panelUrl)) invalid.push("PANEL_URL");
+  const smtp = { user: env.SMTP_USER ?? "", password: env.SMTP_PASSWORD ?? "", from: env.SMTP_FROM ?? "" };
+  const smtpSet = [smtp.user, smtp.password, smtp.from].filter((v) => v !== "").length;
+  if (smtpSet !== 3 && (smtpSet > 0 || !isLocal)) invalid.push("SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM");
+  if (/[\r\n]/.test(smtp.from)) invalid.push("SMTP_FROM");
+  const smtpPort = positiveInt("SMTP_PORT", 465);
+  if (smtpPort > 65535) invalid.push("SMTP_PORT");
+  const mail = smtpSet === 3 ? { host: env.SMTP_HOST ?? "smtp.gmail.com", port: smtpPort, ...smtp } : null;
+  if (mail !== null && mail.host.trim() === "") invalid.push("SMTP_HOST");
+
   if (invalid.length > 0) throw new Error(`Configuracion invalida: ${invalid.join(", ")}`);
-  return { port, timeZone, corsOrigins, mongoUri, mongoDb, recoveryHmacSecret, trustProxyHops, limits };
+  return { port, timeZone, corsOrigins, mongoUri, mongoDb, recoveryHmacSecret, jwtSecret, trustProxyHops, mail, panelUrl, exposeInvitationLink: env.NODE_ENV === "development", limits };
 }

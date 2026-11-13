@@ -1,4 +1,5 @@
 import { Inject, Injectable, type OnModuleInit } from "@nestjs/common";
+import type { Filter } from "mongodb";
 import { DatabaseService } from "../database/database.service.ts";
 
 export interface PlayerDoc {
@@ -19,6 +20,10 @@ export interface PlayerDoc {
   createdAt: Date;
   lastActiveAt: Date;
 }
+
+/** Lo que el panel puede ver de un player: nunca hashes. */
+export type PlayerPanelDoc = Pick<PlayerDoc, "_id" | "nickname" | "groupId" | "level" | "score" | "countsByDifficulty" | "countsByFamily" | "createdAt" | "lastActiveAt">;
+const PANEL_PROJECTION = { nickname: 1, groupId: 1, level: 1, score: 1, countsByDifficulty: 1, countsByFamily: 1, createdAt: 1, lastActiveAt: 1 } as const;
 
 /** Doc 04: `players`. Indices: unicos `tokenHash` y `recoveryHash`; {groupId, createdAt}; {createdAt}. */
 @Injectable()
@@ -80,5 +85,49 @@ export class PlayersRepository implements OnModuleInit {
   /** 1 escritura. `$max`: el nivel solo sube, aun con dos logros aplicandose a la vez. */
   async raiseLevel(playerId: string, level: number): Promise<void> {
     await this.collection.updateOne({ _id: playerId }, { $max: { level } });
+  }
+
+  /** 1 lectura por _id (paginacion por cursor). `filter` incluye el alcance. Pide uno de mas para saber si hay otra pagina. */
+  listPanel(filter: Filter<PlayerDoc>, after: string | undefined, limit: number): Promise<PlayerPanelDoc[]> {
+    const query: Filter<PlayerDoc> = after === undefined ? filter : { $and: [filter, { _id: { $gt: after } }] };
+    return this.collection.find(query, { projection: PANEL_PROJECTION }).sort({ _id: 1 }).limit(limit + 1).toArray();
+  }
+
+  /** 1 lectura. */
+  findPanel(id: string): Promise<PlayerPanelDoc | null> {
+    return this.collection.findOne({ _id: id }, { projection: PANEL_PROJECTION });
+  }
+
+  /** 1 lectura: grupo actual de varios players. */
+  findGroups(ids: string[]): Promise<Pick<PlayerDoc, "_id" | "groupId">[]> {
+    return this.collection.find({ _id: { $in: ids } }, { projection: { groupId: 1 } }).toArray();
+  }
+
+  /** 1 escritura. */
+  async setNickname(id: string, nickname: string): Promise<void> {
+    await this.collection.updateOne({ _id: id }, { $set: { nickname } });
+  }
+
+  /** 1 escritura: el hash viejo deja de servir, el token en uso no se toca. */
+  async setRecoveryHash(id: string, recoveryHash: string): Promise<boolean> {
+    return (await this.collection.updateOne({ _id: id }, { $set: { recoveryHash } })).matchedCount === 1;
+  }
+
+  /** 1 escritura. */
+  async setGroup(ids: string[], groupId: string | null): Promise<void> {
+    await this.collection.updateMany({ _id: { $in: ids } }, { $set: { groupId } });
+  }
+
+  /** 1 escritura: los players de un grupo eliminado quedan sin grupo. */
+  async clearGroup(groupId: string): Promise<void> {
+    await this.collection.updateMany({ groupId }, { $set: { groupId: null } });
+  }
+
+  /** 1 lectura (agregacion sobre {groupId, createdAt}): jugadores por grupo. */
+  async countByGroup(groupIds: readonly string[] | null): Promise<Record<string, number>> {
+    const rows = await this.collection
+      .aggregate<{ _id: string; n: number }>([{ $match: groupIds === null ? { groupId: { $ne: null } } : { groupId: { $in: [...groupIds] } } }, { $group: { _id: "$groupId", n: { $sum: 1 } } }])
+      .toArray();
+    return Object.fromEntries(rows.map((r) => [r._id, r.n]));
   }
 }

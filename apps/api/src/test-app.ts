@@ -1,10 +1,11 @@
-import type { INestApplication } from "@nestjs/common";
+import type { INestApplication, ModuleMetadata } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "./app.module.ts";
 import { configureApp } from "./app.ts";
 import { type TestDatabase, openTestDatabase } from "./database/test-database.ts";
 import { Clock } from "./platform/clock.ts";
+import type { Mailer } from "./platform/mailer.ts";
 import { type AppConfig, loadConfig } from "./platform/config.ts";
 
 /** Reloj de pruebas: la hora solo cambia cuando la prueba lo pide. */
@@ -30,13 +31,13 @@ export interface TestApp {
 }
 
 /** Levanta la API real en un puerto libre contra una base de pruebas nueva (o la dada). */
-export async function startTestApp(env: NodeJS.ProcessEnv = {}, existing?: TestDatabase): Promise<TestApp> {
+export async function startTestApp(env: NodeJS.ProcessEnv = {}, existing?: TestDatabase, extraImports: NonNullable<ModuleMetadata["imports"]> = [], mailer?: Mailer): Promise<TestApp> {
   const testDb = existing ?? (await openTestDatabase());
   const config = loadConfig({ NODE_ENV: "test", MONGODB_URI: testDb.uri, MONGODB_DB: testDb.dbName, ...env });
   const clock = new TestClock(config.timeZone);
   const lines: string[] = [];
   const moduleRef = await Test.createTestingModule({
-    imports: [AppModule.register({ config, clock, logSink: (l) => lines.push(l) })],
+    imports: [AppModule.register({ config, clock, logSink: (l) => lines.push(l), ...(mailer === undefined ? {} : { mailer }) }), ...extraImports],
   }).compile();
   const app = moduleRef.createNestApplication<NestExpressApplication>({ logger: false });
   configureApp(app, config);

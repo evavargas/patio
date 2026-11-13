@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DEV_RECOVERY_HMAC_SECRET, loadConfig } from "./config.ts";
+import { DEV_JWT_SECRET, DEV_RECOVERY_HMAC_SECRET, loadConfig } from "./config.ts";
+
+const PROD_MAIL = { SMTP_USER: "u@example.org", SMTP_PASSWORD: "no-es-real", SMTP_FROM: "Patio <u@example.org>", PANEL_URL: "https://panel.example.org" };
 
 describe("loadConfig", () => {
   it("usa valores por defecto sin variables", () => {
@@ -10,11 +12,16 @@ describe("loadConfig", () => {
       mongoUri: "mongodb://127.0.0.1:27017",
       mongoDb: "patio_dev",
       recoveryHmacSecret: DEV_RECOVERY_HMAC_SECRET,
+      jwtSecret: DEV_JWT_SECRET,
       trustProxyHops: 0,
+      mail: null,
+      panelUrl: "http://localhost:5173",
+      exposeInvitationLink: true,
       limits: {
         register: { max: 20, windowSeconds: 3600 },
         groupCode: { max: 100, windowSeconds: 3600 },
         recover: { max: 100, windowSeconds: 3600 },
+        login: { max: 10, windowSeconds: 900 },
       },
     });
   });
@@ -28,6 +35,7 @@ describe("loadConfig", () => {
       DEFAULT_TIME_ZONE: "America/Argentina/Buenos_Aires",
       CORS_ORIGINS: "https://panel.example.org, http://localhost:5173",
       RECOVERY_HMAC_SECRET: "x".repeat(32),
+      JWT_SECRET: "j".repeat(32),
       TRUST_PROXY_HOPS: "1",
       RATE_LIMIT_REGISTER_MAX: "5",
       RATE_LIMIT_REGISTER_WINDOW_SECONDS: "60",
@@ -35,6 +43,8 @@ describe("loadConfig", () => {
       RATE_LIMIT_GROUP_CODE_WINDOW_SECONDS: "120",
       RATE_LIMIT_RECOVER_MAX: "9",
       RATE_LIMIT_RECOVER_WINDOW_SECONDS: "30",
+      RATE_LIMIT_LOGIN_MAX: "4",
+      RATE_LIMIT_LOGIN_WINDOW_SECONDS: "45",
     });
     expect(config).toEqual({
       port: 3000,
@@ -43,8 +53,12 @@ describe("loadConfig", () => {
       mongoUri: "mongodb+srv://u:p@cluster.example.net",
       mongoDb: "patio",
       recoveryHmacSecret: "x".repeat(32),
+      jwtSecret: "j".repeat(32),
       trustProxyHops: 1,
-      limits: { register: { max: 5, windowSeconds: 60 }, groupCode: { max: 7, windowSeconds: 120 }, recover: { max: 9, windowSeconds: 30 } },
+      mail: null,
+      panelUrl: "http://localhost:5173",
+      exposeInvitationLink: false,
+      limits: { register: { max: 5, windowSeconds: 60 }, groupCode: { max: 7, windowSeconds: 120 }, recover: { max: 9, windowSeconds: 30 }, login: { max: 4, windowSeconds: 45 } },
     });
   });
 
@@ -79,7 +93,7 @@ describe("loadConfig", () => {
 
   it.each([{}, { NODE_ENV: "production" }, { NODE_ENV: "staging" }])("sin NODE_ENV de desarrollo o prueba exige base explicita (%j)", (env) => {
     expect(() => loadConfig(env)).toThrow(/MONGODB_URI, MONGODB_DB/);
-    expect(loadConfig({ ...env, MONGODB_URI: "mongodb+srv://h.example.net", MONGODB_DB: "patio", RECOVERY_HMAC_SECRET: "s".repeat(32) }).mongoDb).toBe("patio");
+    expect(loadConfig({ ...env, MONGODB_URI: "mongodb+srv://h.example.net", MONGODB_DB: "patio", RECOVERY_HMAC_SECRET: "s".repeat(32), JWT_SECRET: "j".repeat(32), ...PROD_MAIL }).mongoDb).toBe("patio");
   });
 });
 
@@ -94,7 +108,7 @@ describe("RECOVERY_HMAC_SECRET", () => {
 
   it.each([{}, { NODE_ENV: "production" }, { NODE_ENV: "staging" }])("falla cerrado fuera de desarrollo (%j)", (env) => {
     expect(() => loadConfig({ ...env, ...base })).toThrow("RECOVERY_HMAC_SECRET");
-    expect(loadConfig({ ...env, ...base, RECOVERY_HMAC_SECRET: "s".repeat(32) }).recoveryHmacSecret).toBe("s".repeat(32));
+    expect(loadConfig({ ...env, ...base, RECOVERY_HMAC_SECRET: "s".repeat(32), JWT_SECRET: "j".repeat(32), ...PROD_MAIL }).recoveryHmacSecret).toBe("s".repeat(32));
   });
 
   it("exige 32 caracteres como minimo en cualquier entorno", () => {
@@ -104,5 +118,55 @@ describe("RECOVERY_HMAC_SECRET", () => {
   it("nunca aparece en un mensaje de error", () => {
     const secret = "secreto-largo-que-no-debe-imprimirse-jamas-1234";
     expect(() => loadConfig({ NODE_ENV: "test", RECOVERY_HMAC_SECRET: secret, PORT: "0" })).not.toThrow(secret);
+  });
+});
+
+describe("JWT_SECRET", () => {
+  const base = { MONGODB_URI: "mongodb+srv://h.example.net", MONGODB_DB: "patio", RECOVERY_HMAC_SECRET: "r".repeat(32) };
+
+  it("el valor de desarrollo es claramente falso y solo rige con NODE_ENV development o test", () => {
+    expect(DEV_JWT_SECRET).toMatch(/INSECURE/);
+    expect(DEV_JWT_SECRET.length).toBeGreaterThanOrEqual(32);
+    expect(loadConfig({ NODE_ENV: "development" }).jwtSecret).toBe(DEV_JWT_SECRET);
+    expect(loadConfig({ NODE_ENV: "test" }).jwtSecret).toBe(DEV_JWT_SECRET);
+  });
+
+  it.each([{}, { NODE_ENV: "production" }, { NODE_ENV: "staging" }])("falla cerrado fuera de desarrollo (%j)", (env) => {
+    expect(() => loadConfig({ ...env, ...base })).toThrow("JWT_SECRET");
+    expect(loadConfig({ ...env, ...base, JWT_SECRET: "j".repeat(32), ...PROD_MAIL }).jwtSecret).toBe("j".repeat(32));
+  });
+
+  it("exige 32 caracteres como minimo y que sea distinto del secreto de recuperacion", () => {
+    expect(() => loadConfig({ NODE_ENV: "test", JWT_SECRET: "j".repeat(31) })).toThrow("JWT_SECRET");
+    expect(() => loadConfig({ NODE_ENV: "test", JWT_SECRET: "j".repeat(32), RECOVERY_HMAC_SECRET: "j".repeat(32) })).toThrow("JWT_SECRET");
+  });
+
+  it("nunca aparece en un mensaje de error", () => {
+    const secret = "jwt-secreto-largo-que-no-debe-imprimirse-jamas-1234";
+    expect(() => loadConfig({ NODE_ENV: "test", JWT_SECRET: secret, PORT: "0" })).not.toThrow(secret);
+  });
+
+  it("el limite de login sale de RATE_LIMIT_LOGIN_* y rechaza valores invalidos", () => {
+    expect(loadConfig({ NODE_ENV: "test" }).limits.login).toEqual({ max: 10, windowSeconds: 900 });
+    expect(() => loadConfig({ NODE_ENV: "test", RATE_LIMIT_LOGIN_MAX: "0" })).toThrow("RATE_LIMIT_LOGIN_MAX");
+  });
+});
+
+describe("correo de invitacion", () => {
+  it("en development sin SMTP el envio se omite; el enlace solo se expone con development", () => {
+    expect(loadConfig({ NODE_ENV: "development" })).toMatchObject({ mail: null, exposeInvitationLink: true });
+    expect(loadConfig({ NODE_ENV: "test" })).toMatchObject({ mail: null, exposeInvitationLink: false });
+  });
+
+  it("con SMTP completo usa Gmail por defecto en el puerto 465", () => {
+    expect(loadConfig({ NODE_ENV: "test", ...PROD_MAIL }).mail).toEqual({ host: "smtp.gmail.com", port: 465, user: "u@example.org", password: "no-es-real", from: "Patio <u@example.org>" });
+  });
+
+  it("SMTP a medias o en produccion sin SMTP falla nombrando variables, sin imprimir valores", () => {
+    expect(() => loadConfig({ NODE_ENV: "test", SMTP_USER: "u@example.org" })).toThrow("SMTP_PASSWORD");
+    const prod = { MONGODB_URI: "mongodb+srv://h.example.net", MONGODB_DB: "patio", RECOVERY_HMAC_SECRET: "s".repeat(32), JWT_SECRET: "j".repeat(32), PANEL_URL: "https://panel.example.org" };
+    expect(() => loadConfig({ NODE_ENV: "production", ...prod })).toThrow("SMTP_USER");
+    expect(() => loadConfig({ NODE_ENV: "production", ...prod, ...PROD_MAIL, SMTP_PASSWORD: "clave-secreta", SMTP_PORT: "x" })).not.toThrow(/clave-secreta/);
+    expect(() => loadConfig({ NODE_ENV: "production", ...prod, PANEL_URL: "no es url", SMTP_USER: "a", SMTP_PASSWORD: "b", SMTP_FROM: "c" })).toThrow("PANEL_URL");
   });
 });

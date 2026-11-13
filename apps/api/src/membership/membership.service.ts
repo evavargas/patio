@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { type RegisterPlayerResponse, isRegisterPlayerRequest } from "@patio/contracts";
+import type { GroupScope } from "../groups/group-scope.ts";
 import { GroupsService, type GroupSummary } from "../groups/groups.service.ts";
 import { PlayersService } from "../players/players.service.ts";
 import { Clock } from "../platform/clock.ts";
@@ -18,8 +19,8 @@ export class MembershipService {
     @Inject(Clock) private readonly clock: Clock,
     @Inject(RateLimitService) private readonly rateLimit: Pick<RateLimitService, "hit" | "isExceeded">,
     @Inject(PlayersService) private readonly players: PlayersService,
-    @Inject(GroupsService) private readonly groups: Pick<GroupsService, "findByCode">,
-    @Inject(MembershipRepository) private readonly memberships: Pick<MembershipRepository, "open" | "deleteByPlayer">,
+    @Inject(GroupsService) private readonly groups: Pick<GroupsService, "findByCode" | "get">,
+    @Inject(MembershipRepository) private readonly memberships: Pick<MembershipRepository, "open" | "deleteByPlayer" | "closeOpen" | "openMany" | "closeByGroup" | "countByPlayer">,
   ) {}
 
   /**
@@ -70,5 +71,47 @@ export class MembershipService {
     } catch {
       // se conserva el error original
     }
+  }
+
+  /**
+   * Mover o sacar players (panel). `targetGroupId` null = sacar del grupo. Reglas: cada player y el destino deben estar en el
+   * alcance (FORBIDDEN_SCOPE); solo el alcance total puede pasar el maximo del destino (GROUP_FULL). Operaciones: 1 lectura de players,
+   * [destino + cuenta], cerrar filas, [abrir filas], actualizar players = 3 a 5.
+   *
+   * Orden sin transacciones: historial primero, jugador despues (doc 04). Cerrar es idempotente (solo toca filas abiertas), asi
+   * que repetir el pedido repara un corte. Si el corte deja filas nuevas sin jugador movido, el historial queda por delante del
+   * jugador: la verificacion de pertenencia (pendiente) toma el historial como verdad. Dos moderadores llenando el mismo grupo a la vez
+   * pueden pasar el maximo (el chequeo no es atomico; sin medir).
+   */
+  async move(scope: GroupScope, playerIds: string[], targetGroupId: string | null): Promise<number> {
+    const current = await this.players.groupsOf(playerIds);
+    for (const groupId of current.values()) if (!scope.allows(groupId)) throw new DomainException("FORBIDDEN_SCOPE", 403);
+    if (!scope.allows(targetGroupId)) throw new DomainException("FORBIDDEN_SCOPE", 403);
+    const moving = playerIds.filter((id) => current.get(id) !== targetGroupId);
+    if (moving.length === 0) return 0;
+    if (targetGroupId !== null) {
+      const target = await this.groups.get(scope, targetGroupId);
+      if (!scope.isAll && (await this.players.countInGroup(targetGroupId)) + moving.length > target.maxSize) throw new DomainException("GROUP_FULL", 409);
+    }
+    const now = this.clock.now();
+    await this.memberships.closeOpen(moving, now);
+    if (targetGroupId !== null) await this.memberships.openMany(moving.map((playerId) => ({ playerId, groupId: targetGroupId, joinedAt: now })));
+    await this.players.setGroup(moving, targetGroupId);
+    return moving.length;
+  }
+
+  /** Efecto de borrar un grupo (despues de borrar el grupo): sus players quedan sin grupo y se cierran las filas. 2 escrituras. Idempotente. */
+  async releaseGroup(groupId: string): Promise<void> {
+    await this.memberships.closeByGroup(groupId, this.clock.now());
+    await this.players.clearGroup(groupId);
+  }
+
+  /** Borra las filas de pertenencia de un player (efecto de borrarlo). 1 escritura. */
+  deleteRows(playerId: string): Promise<void> {
+    return this.memberships.deleteByPlayer(playerId);
+  }
+
+  countRows(playerId: string): Promise<number> {
+    return this.memberships.countByPlayer(playerId);
   }
 }

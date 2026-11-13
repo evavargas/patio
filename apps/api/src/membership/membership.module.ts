@@ -11,5 +11,6 @@ import { MembershipService } from "./membership.service.ts";
   imports: [DatabaseModule, PlayersModule, GroupsModule, RateLimitModule],
   controllers: [MembershipController],
   providers: [MembershipService, MembershipRepository],
+  exports: [MembershipService],
 })
 export class MembershipModule {}
