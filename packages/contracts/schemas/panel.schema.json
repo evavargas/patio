@@ -1,0 +1,484 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "panel.schema.json",
+  "description": "Formas de /v1/panel (cuentas del panel). Distintas de las de /v1 (juego): nunca se reutilizan. Aca SI aparece el nivel del player (solo panel).",
+  "$defs": {
+    "PageCursor": { "title": "PageCursor", "description": "Cursor opaco de paginacion.", "type": "string", "minLength": 1, "maxLength": 128 },
+    "TemporaryPassword": { "title": "TemporaryPassword", "description": "Misma politica que ChangePasswordRequest.newPassword: 15 a 128 caracteres.", "type": "string", "minLength": 15, "maxLength": 128 },
+    "DeletionImpact": {
+      "title": "DeletionImpact",
+      "description": "Respuesta de GET .../deletion-impact: cuantos datos afecta la eliminacion. Las claves dependen del recurso.",
+      "type": "object",
+      "required": ["counts"],
+      "properties": { "counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } } }
+    },
+    "PanelGroup": {
+      "title": "PanelGroup",
+      "type": "object",
+      "required": ["id", "name", "code", "ownerIds", "maxSize", "active", "createdAt", "playerCount"],
+      "properties": {
+        "id": { "$ref": "primitives.schema.json#/$defs/GroupId" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "code": { "$ref": "primitives.schema.json#/$defs/GroupCode" },
+        "ownerIds": { "type": "array", "items": { "$ref": "primitives.schema.json#/$defs/AccountId" } },
+        "maxSize": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "active": { "type": "boolean" },
+        "createdAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "playerCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "PanelGroupList": {
+      "title": "PanelGroupList",
+      "type": "object",
+      "required": ["items"],
+      "properties": { "items": { "type": "array", "items": { "$ref": "#/$defs/PanelGroup" } } }
+    },
+    "CreateGroupRequest": {
+      "title": "CreateGroupRequest",
+      "description": "Un moderator queda como unico dueño; `ownerIds` solo lo respeta si quien crea es administrator. `maxSize` por defecto 50.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "maxSize": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "ownerIds": { "type": "array", "items": { "$ref": "primitives.schema.json#/$defs/AccountId" } }
+      }
+    },
+    "UpdateGroupRequest": {
+      "title": "UpdateGroupRequest",
+      "description": "`ownerIds` solo lo cambia un administrator.",
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "maxSize": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "active": { "type": "boolean" },
+        "ownerIds": { "type": "array", "items": { "$ref": "primitives.schema.json#/$defs/AccountId" } }
+      }
+    },
+    "PanelPlayer": {
+      "title": "PanelPlayer",
+      "description": "Ficha de un player para el panel. Aca SI va el nivel. Nunca token ni codigo.",
+      "type": "object",
+      "required": ["id", "nickname", "groupId", "level", "score", "countsByDifficulty", "countsByFamily", "createdAt", "lastActiveAt"],
+      "properties": {
+        "id": { "$ref": "primitives.schema.json#/$defs/PlayerId" },
+        "nickname": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "groupId": { "oneOf": [{ "$ref": "primitives.schema.json#/$defs/GroupId" }, { "type": "null" }] },
+        "level": { "type": "integer", "minimum": 0 },
+        "score": { "type": "integer", "minimum": 0 },
+        "countsByDifficulty": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "countsByFamily": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "createdAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "lastActiveAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" }
+      }
+    },
+    "PanelPlayerList": {
+      "title": "PanelPlayerList",
+      "type": "object",
+      "required": ["items", "nextCursor"],
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/PanelPlayer" } },
+        "nextCursor": { "oneOf": [{ "$ref": "#/$defs/PageCursor" }, { "type": "null" }] }
+      }
+    },
+    "PanelPlayerDetail": {
+      "title": "PanelPlayerDetail",
+      "description": "Ficha con la actividad de los ultimos 30 dias cerrados (sin hoy): logros por dia.",
+      "type": "object",
+      "required": ["player", "activity"],
+      "properties": {
+        "player": { "$ref": "#/$defs/PanelPlayer" },
+        "activity": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "achieved"],
+            "properties": { "date": { "$ref": "primitives.schema.json#/$defs/DayKey" }, "achieved": { "type": "integer", "minimum": 0 } }
+          }
+        }
+      }
+    },
+    "MovePlayerRequest": {
+      "title": "MovePlayerRequest",
+      "description": "Cuerpo de PATCH /players/:id. `groupId` null = sacar del grupo.",
+      "type": "object",
+      "required": ["groupId"],
+      "properties": { "groupId": { "oneOf": [{ "$ref": "primitives.schema.json#/$defs/GroupId" }, { "type": "null" }] } }
+    },
+    "MovePlayersRequest": {
+      "title": "MovePlayersRequest",
+      "type": "object",
+      "required": ["playerIds", "groupId"],
+      "properties": {
+        "playerIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "primitives.schema.json#/$defs/PlayerId" } },
+        "groupId": { "oneOf": [{ "$ref": "primitives.schema.json#/$defs/GroupId" }, { "type": "null" }] }
+      }
+    },
+    "MovePlayersResponse": {
+      "title": "MovePlayersResponse",
+      "description": "`moved` = cuantos cambiaron de grupo (los que ya estaban en el destino no cuentan).",
+      "type": "object",
+      "required": ["moved"],
+      "properties": { "moved": { "type": "integer", "minimum": 0 } }
+    },
+    "UpdateNicknameRequest": {
+      "title": "UpdateNicknameRequest",
+      "type": "object",
+      "required": ["nickname"],
+      "properties": { "nickname": { "type": "string", "minLength": 1, "maxLength": 64 } }
+    },
+    "ReissueRecoveryResponse": {
+      "title": "ReissueRecoveryResponse",
+      "description": "El codigo nuevo existe en claro SOLO en esta respuesta.",
+      "type": "object",
+      "required": ["recoveryCode"],
+      "properties": { "recoveryCode": { "$ref": "primitives.schema.json#/$defs/RecoveryCode" } }
+    },
+    "PanelChallenge": {
+      "title": "PanelChallenge",
+      "type": "object",
+      "required": ["id", "authorId", "status", "version", "createdAt", "updatedAt", "challenge"],
+      "properties": {
+        "id": { "$ref": "primitives.schema.json#/$defs/ChallengeId" },
+        "authorId": { "$ref": "primitives.schema.json#/$defs/AccountId" },
+        "status": { "enum": ["active", "archived"] },
+        "version": { "type": "integer", "minimum": 1 },
+        "createdAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "updatedAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "challenge": { "$ref": "challenge.schema.json" }
+      }
+    },
+    "PanelChallengeList": {
+      "title": "PanelChallengeList",
+      "type": "object",
+      "required": ["items", "nextCursor"],
+      "properties": {
+        "items": { "type": "array", "items": { "$ref": "#/$defs/PanelChallenge" } },
+        "nextCursor": { "oneOf": [{ "$ref": "#/$defs/PageCursor" }, { "type": "null" }] }
+      }
+    },
+    "PanelDaySet": {
+      "title": "PanelDaySet",
+      "description": "`outsideRecommendedRange` = no tiene de 3 a 5 desafios (aviso, no error).",
+      "type": "object",
+      "required": ["id", "date", "groupId", "status", "challengeIds", "lockedAt", "outsideRecommendedRange"],
+      "properties": {
+        "id": { "$ref": "primitives.schema.json#/$defs/DaySetId" },
+        "date": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "groupId": { "oneOf": [{ "$ref": "primitives.schema.json#/$defs/GroupId" }, { "type": "null" }] },
+        "status": { "enum": ["draft", "published"] },
+        "challengeIds": { "type": "array", "items": { "$ref": "primitives.schema.json#/$defs/ChallengeId" } },
+        "lockedAt": { "oneOf": [{ "$ref": "primitives.schema.json#/$defs/IsoDateTime" }, { "type": "null" }] },
+        "outsideRecommendedRange": { "type": "boolean" }
+      }
+    },
+    "PanelDaySetList": {
+      "title": "PanelDaySetList",
+      "type": "object",
+      "required": ["items"],
+      "properties": { "items": { "type": "array", "items": { "$ref": "#/$defs/PanelDaySet" } } }
+    },
+    "SaveDaySetRequest": {
+      "title": "SaveDaySetRequest",
+      "description": "Cuerpo de PUT /day-sets: guarda el borrador de (date, groupId). `groupId` null = set general (solo administrator).",
+      "type": "object",
+      "required": ["date", "groupId", "challengeIds"],
+      "properties": {
+        "date": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "groupId": { "oneOf": [{ "$ref": "primitives.schema.json#/$defs/GroupId" }, { "type": "null" }] },
+        "challengeIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "primitives.schema.json#/$defs/ChallengeId" } }
+      }
+    },
+    "PanelRules": {
+      "title": "PanelRules",
+      "description": "Reglas de puntos y nivel (GET para ambos roles, PUT solo administrator). `levels[L]` = lo que hace falta para pasar del nivel L al L+1.",
+      "type": "object",
+      "required": ["pointsByDifficulty", "levels", "midnightToleranceMinutes"],
+      "properties": {
+        "pointsByDifficulty": { "type": "object", "propertyNames": { "pattern": "^[1-9]\\d?$" }, "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 100000 } },
+        "levels": {
+          "type": "array",
+          
+          "items": {
+            "type": "object",
+            "required": ["requirements"],
+            "properties": {
+              "requirements": {
+                "type": "array",
+                
+                "items": {
+                  "type": "object",
+                  "required": ["difficulty", "min"],
+                  "properties": {
+                    "difficulty": { "type": "integer", "minimum": 1 },
+                    "family": { "enum": ["resolver", "descubrir", "crear"] },
+                    "min": { "type": "integer", "minimum": 1 }
+                  }
+                }
+              },
+              "minScore": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "midnightToleranceMinutes": { "type": "integer", "minimum": 0, "maximum": 240 }
+      }
+    },
+    "RateRule": {
+      "title": "RateRule",
+      "type": "object",
+      "required": ["max", "windowSeconds"],
+      "properties": { "max": { "type": "integer", "minimum": 1 }, "windowSeconds": { "type": "integer", "minimum": 1 } }
+    },
+    "PanelLimits": {
+      "title": "PanelLimits",
+      "description": "Limites por IP (solo administrator). Hoy se guardan pero el juego sigue leyendo los de la configuracion (pendiente).",
+      "type": "object",
+      "required": ["register", "groupCode", "recover", "login"],
+      "properties": {
+        "register": { "$ref": "#/$defs/RateRule" },
+        "groupCode": { "$ref": "#/$defs/RateRule" },
+        "recover": { "$ref": "#/$defs/RateRule" },
+        "login": { "$ref": "#/$defs/RateRule" }
+      }
+    },
+    "PanelBannedWords": {
+      "title": "PanelBannedWords",
+      "type": "object",
+      "required": ["version", "words"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 0 },
+        "words": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 40 } }
+      }
+    },
+    "UpdateBannedWordsRequest": {
+      "title": "UpdateBannedWordsRequest",
+      "description": "Reemplaza la lista completa. Cada cambio sube la version.",
+      "type": "object",
+      "required": ["words"],
+      "properties": { "words": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 40 } } }
+    },
+    "AccountSummary": {
+      "title": "AccountSummary",
+      "description": "Cuenta tal como la ve el administrator. Sin hashes.",
+      "type": "object",
+      "required": ["id", "email", "role", "active", "mustChangePassword", "createdAt"],
+      "properties": {
+        "id": { "$ref": "primitives.schema.json#/$defs/AccountId" },
+        "email": { "$ref": "account.schema.json#/$defs/Email" },
+        "role": { "$ref": "account.schema.json#/$defs/AccountRole" },
+        "active": { "type": "boolean" },
+        "mustChangePassword": { "type": "boolean" },
+        "createdAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "lastLoginAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" }
+      }
+    },
+    "AccountSummaryList": {
+      "title": "AccountSummaryList",
+      "type": "object",
+      "required": ["items"],
+      "properties": { "items": { "type": "array", "items": { "$ref": "#/$defs/AccountSummary" } } }
+    },
+    "CreateModeratorRequest": {
+      "title": "CreateModeratorRequest",
+      "description": "Crea un moderator con contraseña temporal (queda con mustChangePassword).",
+      "type": "object",
+      "required": ["email", "temporaryPassword"],
+      "properties": { "email": { "type": "string", "minLength": 3, "maxLength": 254 }, "temporaryPassword": { "$ref": "#/$defs/TemporaryPassword" } }
+    },
+    "UpdateAccountRequest": {
+      "title": "UpdateAccountRequest",
+      "type": "object",
+      "minProperties": 1,
+      "properties": { "email": { "type": "string", "minLength": 3, "maxLength": 254 }, "active": { "type": "boolean" } }
+    },
+    "ResetPasswordRequest": {
+      "title": "ResetPasswordRequest",
+      "type": "object",
+      "required": ["temporaryPassword"],
+      "properties": { "temporaryPassword": { "$ref": "#/$defs/TemporaryPassword" } }
+    },
+    "InviteModeratorRequest": {
+      "title": "InviteModeratorRequest",
+      "type": "object",
+      "required": ["email"],
+      "properties": { "email": { "type": "string", "minLength": 3, "maxLength": 254 } }
+    },
+    "InvitationResponse": {
+      "title": "InvitationResponse",
+      "description": "`emailSent` false = el envio se omitio (sin SMTP configurado en desarrollo) o fallo. `link` SOLO existe con NODE_ENV=development.",
+      "type": "object",
+      "required": ["email", "expiresAt", "emailSent"],
+      "properties": {
+        "email": { "$ref": "account.schema.json#/$defs/Email" },
+        "expiresAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "emailSent": { "type": "boolean" },
+        "link": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "AcceptInvitationRequest": {
+      "title": "AcceptInvitationRequest",
+      "description": "Cuerpo de POST /v1/panel/auth/accept-invitation (publico, con limite por IP). Crea el moderator activo.",
+      "type": "object",
+      "required": ["token", "password"],
+      "properties": {
+        "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" },
+        "password": { "type": "string", "minLength": 15, "maxLength": 128 }
+      }
+    },
+    "StatsOverview": {
+      "title": "StatsOverview",
+      "description": "Datos hasta AYER (nunca hoy). `to` es el ultimo dia incluido.",
+      "type": "object",
+      "required": ["from", "to", "totalPlayers", "newPlayers", "groupsCreated", "enteredOnLastDay", "withResultOnLastDay", "resultsOnLastDay", "daily", "playersByLevel"],
+      "properties": {
+        "from": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "to": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "totalPlayers": { "type": "integer", "minimum": 0 },
+        "newPlayers": { "type": "integer", "minimum": 0 },
+        "groupsCreated": { "type": "integer", "minimum": 0 },
+        "enteredOnLastDay": { "type": "integer", "minimum": 0 },
+        "withResultOnLastDay": { "type": "integer", "minimum": 0 },
+        "resultsOnLastDay": { "type": "integer", "minimum": 0 },
+        "daily": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "entered", "withResult"],
+            "properties": {
+              "date": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+              "entered": { "type": "integer", "minimum": 0 },
+              "withResult": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "playersByLevel": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["level", "count"],
+            "properties": { "level": { "type": "integer", "minimum": 0 }, "count": { "type": "integer", "minimum": 0 } }
+          }
+        }
+      }
+    },
+    "StatsChallenges": {
+      "title": "StatsChallenges",
+      "type": "object",
+      "required": ["from", "to", "items"],
+      "properties": {
+        "from": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "to": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["challengeId", "achieved", "avgDurationMs", "byDay"],
+            "properties": {
+              "challengeId": { "$ref": "primitives.schema.json#/$defs/ChallengeId" },
+              "achieved": { "type": "integer", "minimum": 0 },
+              "avgDurationMs": { "type": "integer", "minimum": 0 },
+              "byDay": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["date", "achieved"],
+                  "properties": { "date": { "$ref": "primitives.schema.json#/$defs/DayKey" }, "achieved": { "type": "integer", "minimum": 0 } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "StatsRegistrations": {
+      "title": "StatsRegistrations",
+      "type": "object",
+      "required": ["from", "to", "items"],
+      "properties": {
+        "from": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "to": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "count"],
+            "properties": { "date": { "$ref": "primitives.schema.json#/$defs/DayKey" }, "count": { "type": "integer", "minimum": 0 } }
+          }
+        }
+      }
+    },
+    "StatsGroups": {
+      "title": "StatsGroups",
+      "type": "object",
+      "required": ["from", "to", "items"],
+      "properties": {
+        "from": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "to": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["groupId", "name", "playerCount", "maxSize", "activePlayers", "results"],
+            "properties": {
+              "groupId": { "$ref": "primitives.schema.json#/$defs/GroupId" },
+              "name": { "type": "string" },
+              "playerCount": { "type": "integer", "minimum": 0 },
+              "maxSize": { "type": "integer", "minimum": 1 },
+              "activePlayers": { "type": "integer", "minimum": 0 },
+              "results": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "StatsRankings": {
+      "title": "StatsRankings",
+      "description": "Dos listas por grupo, solo para el panel. Compromiso: dias que entro y logros sobre los desafios disponibles en el rango. Avance: nivel y puntaje.",
+      "type": "object",
+      "required": ["from", "to", "groups"],
+      "properties": {
+        "from": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "to": { "$ref": "primitives.schema.json#/$defs/DayKey" },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["groupId", "name", "commitment", "progress"],
+            "properties": {
+              "groupId": { "$ref": "primitives.schema.json#/$defs/GroupId" },
+              "name": { "type": "string" },
+              "commitment": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["playerId", "nickname", "daysEntered", "achieved", "available"],
+                  "properties": {
+                    "playerId": { "$ref": "primitives.schema.json#/$defs/PlayerId" },
+                    "nickname": { "type": "string" },
+                    "daysEntered": { "type": "integer", "minimum": 0 },
+                    "achieved": { "type": "integer", "minimum": 0 },
+                    "available": { "type": "integer", "minimum": 0 }
+                  }
+                }
+              },
+              "progress": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["playerId", "nickname", "level", "score"],
+                  "properties": {
+                    "playerId": { "$ref": "primitives.schema.json#/$defs/PlayerId" },
+                    "nickname": { "type": "string" },
+                    "level": { "type": "integer", "minimum": 0 },
+                    "score": { "type": "integer", "minimum": 0 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

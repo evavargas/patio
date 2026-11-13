@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "account.schema.json",
+  "description": "Cuentas del panel y autenticacion de /v1/panel. Distinto de los DTO de /v1 (juego): nunca se reutilizan.",
+  "$defs": {
+    "Email": {
+      "title": "Email",
+      "description": "Correo normalizado (recortado y en minusculas) tal como se guarda.",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 254,
+      "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    },
+    "AccountRole": {
+      "title": "AccountRole",
+      "description": "Los dos unicos roles del panel. No existe un tercero.",
+      "enum": ["moderator", "administrator"]
+    },
+    "AccessToken": {
+      "title": "AccessToken",
+      "description": "JWT HS256 de 15 minutos. Viaja en Authorization: Bearer.",
+      "type": "string",
+      "maxLength": 1024,
+      "pattern": "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$"
+    },
+    "PanelRefreshToken": {
+      "title": "PanelRefreshToken",
+      "description": "Token opaco de 32 bytes aleatorios en base64url (43 caracteres). Rota en cada uso.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "PanelAccount": {
+      "title": "PanelAccount",
+      "description": "Respuesta de GET /v1/panel/auth/me y parte de PanelSession. Sin hashes. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": ["id", "email", "role", "mustChangePassword"],
+      "properties": {
+        "id": { "$ref": "primitives.schema.json#/$defs/AccountId" },
+        "email": { "$ref": "#/$defs/Email" },
+        "role": { "$ref": "#/$defs/AccountRole" },
+        "mustChangePassword": { "type": "boolean" }
+      }
+    },
+    "LoginRequest": {
+      "title": "LoginRequest",
+      "description": "Cuerpo de POST /v1/panel/auth/login (publico, con limite por IP y correo). El schema no impone la politica de contrasenas: un login con contrasena corta responde igual que uno equivocado.",
+      "type": "object",
+      "required": ["email", "password"],
+      "properties": {
+        "email": { "type": "string", "minLength": 1, "maxLength": 254 },
+        "password": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "RefreshRequest": {
+      "title": "RefreshRequest",
+      "description": "Cuerpo de POST /v1/panel/auth/refresh (publico: el refresh token es la credencial).",
+      "type": "object",
+      "required": ["refreshToken"],
+      "properties": {
+        "refreshToken": { "$ref": "#/$defs/PanelRefreshToken" }
+      }
+    },
+    "LogoutRequest": {
+      "title": "LogoutRequest",
+      "description": "Cuerpo de POST /v1/panel/auth/logout (publico, responde 204 sin cuerpo, tambien si el token ya no existe).",
+      "type": "object",
+      "required": ["refreshToken"],
+      "properties": {
+        "refreshToken": { "$ref": "#/$defs/PanelRefreshToken" }
+      }
+    },
+    "ChangePasswordRequest": {
+      "title": "ChangePasswordRequest",
+      "description": "Cuerpo de POST /v1/panel/auth/change-password (requiere access token; unica operacion permitida con mustChangePassword). La nueva: 15 a 128 caracteres, sin reglas de composicion (propuesta, ASVS 5.0 v6.2.1).",
+      "type": "object",
+      "required": ["currentPassword", "newPassword"],
+      "properties": {
+        "currentPassword": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "newPassword": { "type": "string", "minLength": 15, "maxLength": 128 }
+      }
+    },
+    "PanelSession": {
+      "title": "PanelSession",
+      "description": "Respuesta 200 de login, refresh y change-password. `expiresAt` es el vencimiento del access token. Los tokens solo existen en claro en esta respuesta. Los clientes toleran campos nuevos.",
+      "type": "object",
+      "required": ["accessToken", "refreshToken", "expiresAt", "account"],
+      "properties": {
+        "accessToken": { "$ref": "#/$defs/AccessToken" },
+        "refreshToken": { "$ref": "#/$defs/PanelRefreshToken" },
+        "expiresAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "account": { "$ref": "#/$defs/PanelAccount" }
+      }
+    },
+    "AccountRecord": {
+      "title": "AccountRecord",
+      "description": "Documento de la coleccion `accounts`, serializado a JSON (en la base los instantes son Date BSON). NUNCA sale por la API: PanelAccount es lo que se devuelve.",
+      "type": "object",
+      "required": ["_id", "email", "role", "passwordHash", "mustChangePassword", "active", "createdAt", "passwordChangedAt"],
+      "properties": {
+        "_id": { "$ref": "primitives.schema.json#/$defs/AccountId" },
+        "email": { "$ref": "#/$defs/Email" },
+        "role": { "$ref": "#/$defs/AccountRole" },
+        "passwordHash": { "type": "string", "maxLength": 256, "pattern": "^\\$argon2id\\$v=19\\$m=\\d+,t=\\d+,p=\\d+\\$[A-Za-z0-9+/]+\\$[A-Za-z0-9+/]+$" },
+        "mustChangePassword": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "createdAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "passwordChangedAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" },
+        "lastLoginAt": { "$ref": "primitives.schema.json#/$defs/IsoDateTime" }
+      }
+    }
+  }
+}

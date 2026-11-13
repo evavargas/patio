@@ -13,6 +13,7 @@
         "CANNOT_DELETE_OWN_ACCOUNT",
         "CHALLENGE_NOT_FOUND",
         "CHALLENGE_NOT_IN_SET",
+        "CONFIRMATION_REQUIRED",
         "DAY_ACCESS_NOT_FOUND",
         "DAY_SET_NOT_FOUND",
         "FORBIDDEN_ROLE",
@@ -24,6 +25,7 @@
         "INVALID_CREDENTIALS",
         "INVALID_REFRESH_TOKEN",
         "INVALID_TOKEN",
+        "INVITATION_INVALID",
         "NICKNAME_NOT_ALLOWED",
         "PASSWORD_CHANGE_REQUIRED",
         "PLAYER_ALREADY_IN_GROUP",
@@ -40,11 +42,21 @@
     "ErrorBody": {
       "title": "ErrorBody",
       "type": "object",
-      "required": ["code", "message"],
+      "required": [
+        "code",
+        "message"
+      ],
       "properties": {
-        "code": { "$ref": "#/$defs/ErrorCode" },
-        "message": { "type": "string", "description": "Sin datos personales." },
-        "details": { "type": "object" }
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        },
+        "message": {
+          "type": "string",
+          "description": "Sin datos personales."
+        },
+        "details": {
+          "type": "object"
+        }
       }
     }
   }

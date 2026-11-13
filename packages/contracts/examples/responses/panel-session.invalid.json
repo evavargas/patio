@@ -1,0 +1,6 @@
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhY2MtMSJ9.c2ln",
+  "refreshToken": "q8Zx1m0Jp3Yt5uVb7Nc9Ra2Ds4Fg6Hj8Kl0Mn1Pq3Rs",
+  "expiresAt": "2026-11-11T15:15:00.000Z",
+  "account": { "id": "6f1c1a52", "email": "maria@example.org", "role": "player", "mustChangePassword": false }
+}

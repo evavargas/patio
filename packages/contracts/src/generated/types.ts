@@ -90,6 +90,7 @@ export type ErrorCode =
   | "CANNOT_DELETE_OWN_ACCOUNT"
   | "CHALLENGE_NOT_FOUND"
   | "CHALLENGE_NOT_IN_SET"
+  | "CONFIRMATION_REQUIRED"
   | "DAY_ACCESS_NOT_FOUND"
   | "DAY_SET_NOT_FOUND"
   | "FORBIDDEN_ROLE"
@@ -101,6 +102,7 @@ export type ErrorCode =
   | "INVALID_CREDENTIALS"
   | "INVALID_REFRESH_TOKEN"
   | "INVALID_TOKEN"
+  | "INVITATION_INVALID"
   | "NICKNAME_NOT_ALLOWED"
   | "PASSWORD_CHANGE_REQUIRED"
   | "PLAYER_ALREADY_IN_GROUP"
@@ -119,6 +121,48 @@ export type ErrorCode =
  * via the `definition` "EventId".
  */
 export type EventId = string;
+/**
+ * Correo normalizado (recortado y en minusculas) tal como se guarda.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "Email".
+ */
+export type Email = string;
+/**
+ * Los dos unicos roles del panel. No existe un tercero.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "AccountRole".
+ */
+export type AccountRole = "moderator" | "administrator";
+/**
+ * JWT HS256 de 15 minutos. Viaja en Authorization: Bearer.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "AccessToken".
+ */
+export type AccessToken = string;
+/**
+ * Token opaco de 32 bytes aleatorios en base64url (43 caracteres). Rota en cada uso.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelRefreshToken".
+ */
+export type PanelRefreshToken = string;
+/**
+ * Cursor opaco de paginacion.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PageCursor".
+ */
+export type PageCursor = string;
+/**
+ * Misma politica que ChangePasswordRequest.newPassword: 15 a 128 caracteres.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "TemporaryPassword".
+ */
+export type TemporaryPassword = string;
 
 /**
  * Entrada de la generacion de tipos. No se valida contra este archivo.
@@ -352,4 +396,509 @@ export interface SubmitResultRequest {
 export interface SubmitResultResponse {
   score: number;
   pointsEarned: number;
+}
+/**
+ * Respuesta de GET /v1/panel/auth/me y parte de PanelSession. Sin hashes. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelAccount".
+ */
+export interface PanelAccount {
+  id: AccountId;
+  email: Email;
+  role: AccountRole;
+  mustChangePassword: boolean;
+}
+/**
+ * Cuerpo de POST /v1/panel/auth/login (publico, con limite por IP y correo). El schema no impone la politica de contrasenas: un login con contrasena corta responde igual que uno equivocado.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "LoginRequest".
+ */
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+/**
+ * Cuerpo de POST /v1/panel/auth/refresh (publico: el refresh token es la credencial).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "RefreshRequest".
+ */
+export interface RefreshRequest {
+  refreshToken: PanelRefreshToken;
+}
+/**
+ * Cuerpo de POST /v1/panel/auth/logout (publico, responde 204 sin cuerpo, tambien si el token ya no existe).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "LogoutRequest".
+ */
+export interface LogoutRequest {
+  refreshToken: PanelRefreshToken;
+}
+/**
+ * Cuerpo de POST /v1/panel/auth/change-password (requiere access token; unica operacion permitida con mustChangePassword). La nueva: 15 a 128 caracteres, sin reglas de composicion (propuesta, ASVS 5.0 v6.2.1).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "ChangePasswordRequest".
+ */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+/**
+ * Respuesta 200 de login, refresh y change-password. `expiresAt` es el vencimiento del access token. Los tokens solo existen en claro en esta respuesta. Los clientes toleran campos nuevos.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelSession".
+ */
+export interface PanelSession {
+  accessToken: AccessToken;
+  refreshToken: PanelRefreshToken;
+  expiresAt: IsoDateTime;
+  account: PanelAccount;
+}
+/**
+ * Documento de la coleccion `accounts`, serializado a JSON (en la base los instantes son Date BSON). NUNCA sale por la API: PanelAccount es lo que se devuelve.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "AccountRecord".
+ */
+export interface AccountRecord {
+  _id: AccountId;
+  email: Email;
+  role: AccountRole;
+  passwordHash: string;
+  mustChangePassword: boolean;
+  active: boolean;
+  createdAt: IsoDateTime;
+  passwordChangedAt: IsoDateTime;
+  lastLoginAt?: IsoDateTime;
+}
+/**
+ * Respuesta de GET .../deletion-impact: cuantos datos afecta la eliminacion. Las claves dependen del recurso.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "DeletionImpact".
+ */
+export interface DeletionImpact {
+  counts: {
+    [k: string]: number | undefined;
+  };
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelGroup".
+ */
+export interface PanelGroup {
+  id: GroupId;
+  name: string;
+  code: GroupCode;
+  ownerIds: AccountId[];
+  maxSize: number;
+  active: boolean;
+  createdAt: IsoDateTime;
+  playerCount: number;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelGroupList".
+ */
+export interface PanelGroupList {
+  items: PanelGroup[];
+}
+/**
+ * Un moderator queda como unico dueño; `ownerIds` solo lo respeta si quien crea es administrator. `maxSize` por defecto 50.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "CreateGroupRequest".
+ */
+export interface CreateGroupRequest {
+  name: string;
+  maxSize?: number;
+  ownerIds?: AccountId[];
+}
+/**
+ * `ownerIds` solo lo cambia un administrator.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "UpdateGroupRequest".
+ */
+export interface UpdateGroupRequest {
+  name?: string;
+  maxSize?: number;
+  active?: boolean;
+  ownerIds?: AccountId[];
+}
+/**
+ * Ficha de un player para el panel. Aca SI va el nivel. Nunca token ni codigo.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelPlayer".
+ */
+export interface PanelPlayer {
+  id: PlayerId;
+  nickname: string;
+  groupId: GroupId | null;
+  level: number;
+  score: number;
+  countsByDifficulty: {
+    [k: string]: number | undefined;
+  };
+  countsByFamily: {
+    [k: string]: number | undefined;
+  };
+  createdAt: IsoDateTime;
+  lastActiveAt: IsoDateTime;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelPlayerList".
+ */
+export interface PanelPlayerList {
+  items: PanelPlayer[];
+  nextCursor: PageCursor | null;
+}
+/**
+ * Ficha con la actividad de los ultimos 30 dias cerrados (sin hoy): logros por dia.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelPlayerDetail".
+ */
+export interface PanelPlayerDetail {
+  player: PanelPlayer;
+  activity: {
+    date: DayKey;
+    achieved: number;
+  }[];
+}
+/**
+ * Cuerpo de PATCH /players/:id. `groupId` null = sacar del grupo.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "MovePlayerRequest".
+ */
+export interface MovePlayerRequest {
+  groupId: GroupId | null;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "MovePlayersRequest".
+ */
+export interface MovePlayersRequest {
+  /**
+   * @minItems 1
+   */
+  playerIds: [PlayerId, ...PlayerId[]];
+  groupId: GroupId | null;
+}
+/**
+ * `moved` = cuantos cambiaron de grupo (los que ya estaban en el destino no cuentan).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "MovePlayersResponse".
+ */
+export interface MovePlayersResponse {
+  moved: number;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "UpdateNicknameRequest".
+ */
+export interface UpdateNicknameRequest {
+  nickname: string;
+}
+/**
+ * El codigo nuevo existe en claro SOLO en esta respuesta.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "ReissueRecoveryResponse".
+ */
+export interface ReissueRecoveryResponse {
+  recoveryCode: RecoveryCode;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelChallenge".
+ */
+export interface PanelChallenge {
+  id: ChallengeId;
+  authorId: AccountId;
+  status: "active" | "archived";
+  version: number;
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
+  challenge: Challenge;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelChallengeList".
+ */
+export interface PanelChallengeList {
+  items: PanelChallenge[];
+  nextCursor: PageCursor | null;
+}
+/**
+ * `outsideRecommendedRange` = no tiene de 3 a 5 desafios (aviso, no error).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelDaySet".
+ */
+export interface PanelDaySet {
+  id: DaySetId;
+  date: DayKey;
+  groupId: GroupId | null;
+  status: "draft" | "published";
+  challengeIds: ChallengeId[];
+  lockedAt: IsoDateTime | null;
+  outsideRecommendedRange: boolean;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelDaySetList".
+ */
+export interface PanelDaySetList {
+  items: PanelDaySet[];
+}
+/**
+ * Cuerpo de PUT /day-sets: guarda el borrador de (date, groupId). `groupId` null = set general (solo administrator).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "SaveDaySetRequest".
+ */
+export interface SaveDaySetRequest {
+  date: DayKey;
+  groupId: GroupId | null;
+  challengeIds: ChallengeId[];
+}
+/**
+ * Reglas de puntos y nivel (GET para ambos roles, PUT solo administrator). `levels[L]` = lo que hace falta para pasar del nivel L al L+1.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelRules".
+ */
+export interface PanelRules {
+  pointsByDifficulty: {
+    [k: string]: number | undefined;
+  };
+  levels: {
+    requirements: {
+      difficulty: number;
+      family?: "resolver" | "descubrir" | "crear";
+      min: number;
+    }[];
+    minScore?: number;
+  }[];
+  midnightToleranceMinutes: number;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "RateRule".
+ */
+export interface RateRule {
+  max: number;
+  windowSeconds: number;
+}
+/**
+ * Limites por IP (solo administrator). Hoy se guardan pero el juego sigue leyendo los de la configuracion (pendiente).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelLimits".
+ */
+export interface PanelLimits {
+  register: RateRule;
+  groupCode: RateRule;
+  recover: RateRule;
+  login: RateRule;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "PanelBannedWords".
+ */
+export interface PanelBannedWords {
+  version: number;
+  words: string[];
+}
+/**
+ * Reemplaza la lista completa. Cada cambio sube la version.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "UpdateBannedWordsRequest".
+ */
+export interface UpdateBannedWordsRequest {
+  words: string[];
+}
+/**
+ * Cuenta tal como la ve el administrator. Sin hashes.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "AccountSummary".
+ */
+export interface AccountSummary {
+  id: AccountId;
+  email: Email;
+  role: AccountRole;
+  active: boolean;
+  mustChangePassword: boolean;
+  createdAt: IsoDateTime;
+  lastLoginAt?: IsoDateTime;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "AccountSummaryList".
+ */
+export interface AccountSummaryList {
+  items: AccountSummary[];
+}
+/**
+ * Crea un moderator con contraseña temporal (queda con mustChangePassword).
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "CreateModeratorRequest".
+ */
+export interface CreateModeratorRequest {
+  email: string;
+  temporaryPassword: TemporaryPassword;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "UpdateAccountRequest".
+ */
+export interface UpdateAccountRequest {
+  email?: string;
+  active?: boolean;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "ResetPasswordRequest".
+ */
+export interface ResetPasswordRequest {
+  temporaryPassword: TemporaryPassword;
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "InviteModeratorRequest".
+ */
+export interface InviteModeratorRequest {
+  email: string;
+}
+/**
+ * `emailSent` false = el envio se omitio (sin SMTP configurado en desarrollo) o fallo. `link` SOLO existe con NODE_ENV=development.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "InvitationResponse".
+ */
+export interface InvitationResponse {
+  email: Email;
+  expiresAt: IsoDateTime;
+  emailSent: boolean;
+  link?: string;
+}
+/**
+ * Cuerpo de POST /v1/panel/auth/accept-invitation (publico, con limite por IP). Crea el moderator activo.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "AcceptInvitationRequest".
+ */
+export interface AcceptInvitationRequest {
+  token: string;
+  password: string;
+}
+/**
+ * Datos hasta AYER (nunca hoy). `to` es el ultimo dia incluido.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "StatsOverview".
+ */
+export interface StatsOverview {
+  from: DayKey;
+  to: DayKey;
+  totalPlayers: number;
+  newPlayers: number;
+  groupsCreated: number;
+  enteredOnLastDay: number;
+  withResultOnLastDay: number;
+  resultsOnLastDay: number;
+  daily: {
+    date: DayKey;
+    entered: number;
+    withResult: number;
+  }[];
+  playersByLevel: {
+    level: number;
+    count: number;
+  }[];
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "StatsChallenges".
+ */
+export interface StatsChallenges {
+  from: DayKey;
+  to: DayKey;
+  items: {
+    challengeId: ChallengeId;
+    achieved: number;
+    avgDurationMs: number;
+    byDay: {
+      date: DayKey;
+      achieved: number;
+    }[];
+  }[];
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "StatsRegistrations".
+ */
+export interface StatsRegistrations {
+  from: DayKey;
+  to: DayKey;
+  items: {
+    date: DayKey;
+    count: number;
+  }[];
+}
+/**
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "StatsGroups".
+ */
+export interface StatsGroups {
+  from: DayKey;
+  to: DayKey;
+  items: {
+    groupId: GroupId;
+    name: string;
+    playerCount: number;
+    maxSize: number;
+    activePlayers: number;
+    results: number;
+  }[];
+}
+/**
+ * Dos listas por grupo, solo para el panel. Compromiso: dias que entro y logros sobre los desafios disponibles en el rango. Avance: nivel y puntaje.
+ *
+ * This interface was referenced by `IndexSchemaJson`'s JSON-Schema
+ * via the `definition` "StatsRankings".
+ */
+export interface StatsRankings {
+  from: DayKey;
+  to: DayKey;
+  groups: {
+    groupId: GroupId;
+    name: string;
+    commitment: {
+      playerId: PlayerId;
+      nickname: string;
+      daysEntered: number;
+      achieved: number;
+      available: number;
+    }[];
+    progress: {
+      playerId: PlayerId;
+      nickname: string;
+      level: number;
+      score: number;
+    }[];
+  }[];
 }

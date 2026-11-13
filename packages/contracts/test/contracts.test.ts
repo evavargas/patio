@@ -18,6 +18,14 @@ import {
   isDayResponse,
   isSubmitResultRequest,
   isSubmitResultResponse,
+  isLoginRequest,
+  isRefreshRequest,
+  isLogoutRequest,
+  isChangePasswordRequest,
+  isPanelSession,
+  isPanelAccount,
+  isAccountRecord,
+  panelValidators,
 } from "../src/index.ts";
 
 const dir = (kind: "valid" | "invalid"): string[] =>
@@ -85,7 +93,8 @@ describe("error", () => {
 describe("level", () => {
   it("ningun schema menciona level", () => {
     const schemasDir = join(import.meta.dirname, "../schemas");
-    for (const f of readdirSync(schemasDir)) {
+    // panel.schema.json SI lleva nivel: es la ficha del player para el panel, nunca /v1.
+    for (const f of readdirSync(schemasDir).filter((n) => n !== "panel.schema.json")) {
       expect(readFileSync(join(schemasDir, f), "utf8")).not.toMatch(/"level"/);
     }
   });
@@ -244,5 +253,81 @@ describe("pedir el dia y enviar logro", () => {
     expect(isSubmitResultResponse(ex("responses", "submit-result.invalid.json"))).toBe(false);
     expect(Object.keys(ex("responses", "submit-result.valid.json")).sort()).toEqual(["pointsEarned", "score"]);
     expect(isSubmitResultResponse({ score: 10 })).toBe(false);
+  });
+});
+
+describe("autenticacion del panel", () => {
+  const ex = (kind: "requests" | "responses" | "records", f: string): Record<string, unknown> =>
+    JSON.parse(readFileSync(join(import.meta.dirname, "../examples", kind, f), "utf8"));
+  const files = (kind: "requests" | "responses" | "records", prefix: string, ext: string): string[] =>
+    readdirSync(join(import.meta.dirname, "../examples", kind)).filter((f) => f.startsWith(prefix) && f.endsWith(ext)).sort();
+  const checks = [
+    ["panel-login", isLoginRequest],
+    ["panel-refresh", isRefreshRequest],
+    ["panel-logout", isLogoutRequest],
+    ["panel-change-password", isChangePasswordRequest],
+  ] as const;
+
+  for (const [prefix, check] of checks) {
+    it.each(files("requests", prefix, ".valid.json"))("pedido: acepta %s", (f) => {
+      expect(check(ex("requests", f))).toBe(true);
+    });
+    it.each(files("requests", prefix, ".invalid.json"))("pedido: rechaza %s", (f) => {
+      expect(check(ex("requests", f))).toBe(false);
+    });
+  }
+  it("hay al menos un ejemplo invalido por cada pedido", () => {
+    for (const [prefix] of checks) expect(files("requests", prefix, ".invalid.json").length).toBeGreaterThan(0);
+  });
+  it("login: acota el largo de la contrasena (el servidor no revela la politica) y tolera campos nuevos", () => {
+    const ok = ex("requests", "panel-login.valid.json");
+    expect(isLoginRequest({ ...ok, password: "a".repeat(128) })).toBe(true);
+    expect(isLoginRequest({ ...ok, password: "a".repeat(129) })).toBe(false);
+    expect(isLoginRequest({ ...ok, email: "a".repeat(255) })).toBe(false);
+    expect(isLoginRequest({ ...ok, extra: 1 })).toBe(true);
+  });
+  it("cambiar contrasena: la nueva tiene entre 15 y 128 caracteres", () => {
+    const ok = ex("requests", "panel-change-password.valid.json");
+    expect(isChangePasswordRequest({ ...ok, newPassword: "a".repeat(15) })).toBe(true);
+    expect(isChangePasswordRequest({ ...ok, newPassword: "a".repeat(14) })).toBe(false);
+    expect(isChangePasswordRequest({ ...ok, newPassword: "a".repeat(129) })).toBe(false);
+  });
+  it("sesion: acepta el ejemplo, rechaza el invalido y no trae hashes ni nivel", () => {
+    expect(isPanelSession(ex("responses", "panel-session.valid.json"))).toBe(true);
+    expect(isPanelSession(ex("responses", "panel-session.invalid.json"))).toBe(false);
+    expect(Object.keys(ex("responses", "panel-session.valid.json")).sort()).toEqual(["accessToken", "account", "expiresAt", "refreshToken"]);
+    for (const f of ["panel-session.valid.json", "panel-account.valid.json"]) {
+      expect(JSON.stringify(ex("responses", f))).not.toMatch(/hash|"password"|level/i);
+    }
+  });
+  it("cuenta del panel: solo id, correo, rol y mustChangePassword; el rol es moderator o administrator", () => {
+    expect(isPanelAccount(ex("responses", "panel-account.valid.json"))).toBe(true);
+    expect(isPanelAccount(ex("responses", "panel-account.invalid.json"))).toBe(false);
+    expect(Object.keys(ex("responses", "panel-account.valid.json")).sort()).toEqual(["email", "id", "mustChangePassword", "role"]);
+    expect(isPanelAccount({ ...ex("responses", "panel-account.valid.json"), role: "player" })).toBe(false);
+  });
+  it("documento accounts: acepta el ejemplo y rechaza un hash que no sea argon2id", () => {
+    expect(isAccountRecord(ex("records", "account.valid.json"))).toBe(true);
+    expect(isAccountRecord(ex("records", "account.invalid.json"))).toBe(false);
+    expect(isAccountRecord({ ...ex("records", "account.valid.json"), role: "player" })).toBe(false);
+  });
+});
+
+describe("formas del panel", () => {
+  const dirPanel = join(import.meta.dirname, "../examples/panel");
+  const kebab = (n: string): string => n.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+  const read = (f: string): unknown => JSON.parse(readFileSync(join(dirPanel, f), "utf8"));
+
+  it.each(Object.keys(panelValidators))("%s: acepta su ejemplo valido", (name) => {
+    expect(panelValidators[name]?.(read(`${kebab(name)}.valid.json`))).toBe(true);
+  });
+  it("rechaza contrasena corta, cambio vacio y lote vacio", () => {
+    expect(panelValidators.AcceptInvitationRequest?.(read("accept-invitation-short-password.invalid.json"))).toBe(false);
+    expect(panelValidators.UpdateGroupRequest?.(read("update-group-empty.invalid.json"))).toBe(false);
+    expect(panelValidators.MovePlayersRequest?.(read("move-players-empty.invalid.json"))).toBe(false);
+  });
+  it("las respuestas de /v1 siguen sin nivel; la ficha del panel si lo trae", () => {
+    expect(JSON.stringify(read("panel-player.valid.json"))).toContain('"level"');
+    expect(JSON.stringify(read("reissue-recovery-response.valid.json"))).not.toMatch(/hash/i);
   });
 });

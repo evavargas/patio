@@ -1,0 +1,23 @@
+{
+  "from": "2026-11-05",
+  "to": "2026-11-11",
+  "totalPlayers": 12,
+  "newPlayers": 3,
+  "groupsCreated": 3,
+  "enteredOnLastDay": 8,
+  "withResultOnLastDay": 6,
+  "resultsOnLastDay": 20,
+  "daily": [
+    {
+      "date": "2026-11-11",
+      "entered": 8,
+      "withResult": 6
+    }
+  ],
+  "playersByLevel": [
+    {
+      "level": 0,
+      "count": 5
+    }
+  ]
+}

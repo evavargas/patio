@@ -1,0 +1,18 @@
+{
+  "register": {
+    "max": 10,
+    "windowSeconds": 900
+  },
+  "groupCode": {
+    "max": 10,
+    "windowSeconds": 900
+  },
+  "recover": {
+    "max": 10,
+    "windowSeconds": 900
+  },
+  "login": {
+    "max": 10,
+    "windowSeconds": 900
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "from": "2026-11-05",
+  "to": "2026-11-11",
+  "groups": [
+    {
+      "groupId": "11111111-1111-4111-8111-111111111111",
+      "name": "Tercero A",
+      "commitment": [
+        {
+          "playerId": "ABCDEFGH2345",
+          "nickname": "Zorro",
+          "daysEntered": 5,
+          "achieved": 12,
+          "available": 15
+        }
+      ],
+      "progress": [
+        {
+          "playerId": "ABCDEFGH2345",
+          "nickname": "Zorro",
+          "level": 1,
+          "score": 30
+        }
+      ]
+    }
+  ]
+}

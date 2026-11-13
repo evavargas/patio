@@ -1,0 +1,27 @@
+{
+  "pointsByDifficulty": {
+    "1": 10,
+    "2": 20
+  },
+  "levels": [
+    {
+      "requirements": [
+        {
+          "difficulty": 1,
+          "min": 5
+        }
+      ]
+    },
+    {
+      "requirements": [
+        {
+          "difficulty": 2,
+          "family": "resolver",
+          "min": 3
+        }
+      ],
+      "minScore": 100
+    }
+  ],
+  "midnightToleranceMinutes": 30
+}
