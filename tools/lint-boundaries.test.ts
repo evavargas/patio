@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const ROOT = join(import.meta.dirname, "..");
 // no-restricted-paths solo evalua imports que resuelven a un archivo real: se crean archivos de mentira
 // (`y.ts`). Se borra SOLO lo creado aca: nunca un directorio de modulo real.
-const FIXTURE_FILES = ["groups", "players", "database", "word-filter", "auth", "membership", "rate-limit", "rules", "day-sets", "results"].map((m) => join(ROOT, "apps/api/src", m, "y.ts"));
+const FIXTURE_FILES = ["groups", "players", "database", "word-filter", "auth", "membership", "rate-limit", "rules", "day-sets", "results", "accounts", "stats", "challenges", "panel"].map((m) => join(ROOT, "apps/api/src", m, "y.ts"));
 const createdDirs: string[] = [];
 
 beforeAll(() => {
@@ -94,6 +94,24 @@ describe("reglas de lint del repo", () => {
     expect(await rulesFor("apps/api/src/players/x.ts", 'import "../results/y.ts";\n')).toContain("import-x/no-restricted-paths");
     expect(await rulesFor("apps/api/src/players/x.ts", 'import "../rules/y.ts";\n')).toContain("import-x/no-restricted-paths");
     expect(await rulesFor("apps/api/src/membership/x.ts", 'import "../results/y.ts";\n')).toContain("import-x/no-restricted-paths");
+  });
+
+  it("accounts usa auth y los transversales; players, groups, membership y results no lo usan, ni accounts a ellos; auth no usa accounts", async () => {
+    expect(await rulesFor("apps/api/src/accounts/x.ts", 'import "../auth/y.ts";\nimport "../platform/clock.ts";\nimport "../database/y.ts";\nimport "../rate-limit/y.ts";\n')).not.toContain("import-x/no-restricted-paths");
+    for (const other of ["players", "groups", "membership", "results", "word-filter", "rules", "day-sets"]) {
+      expect(await rulesFor("apps/api/src/accounts/x.ts", `import "../${other}/y.ts";\n`), `accounts -> ${other}`).toContain("import-x/no-restricted-paths");
+    }
+    for (const other of ["players", "groups", "membership", "results", "auth"]) {
+      expect(await rulesFor(`apps/api/src/${other}/x.ts`, 'import "../accounts/y.ts";\n'), `${other} -> accounts`).toContain("import-x/no-restricted-paths");
+    }
+  });
+
+  it("panel puede usar los servicios de cada modulo; ningun modulo de negocio usa panel", async () => {
+    for (const other of ["accounts", "groups", "players", "membership", "challenges", "day-sets", "results", "rules", "word-filter", "stats"]) {
+      expect(await rulesFor("apps/api/src/panel/x.ts", `import "../${other}/y.ts";\n`), `panel -> ${other}`).not.toContain("import-x/no-restricted-paths");
+      expect(await rulesFor(`apps/api/src/${other}/x.ts`, 'import "../panel/y.ts";\n'), `${other} -> panel`).toContain("import-x/no-restricted-paths");
+    }
+    expect(await rulesFor("apps/api/src/panel/x.ts", 'import "../auth/y.ts";\n')).toContain("import-x/no-restricted-paths");
   });
 
   it("any, enum, as, Date.now, new Date y performance.now fallan fuera del reloj", async () => {

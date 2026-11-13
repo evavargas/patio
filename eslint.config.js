@@ -10,7 +10,8 @@ import { importX, createNodeResolver } from "eslint-plugin-import-x";
 export const API_MODULE_DEPS = {
   auth: [],
   players: ["auth", "word-filter"],
-  groups: [],
+  // groups genera el codigo de grupo con el alfabeto unico de auth (doc 01)
+  groups: ["auth"],
   membership: ["players", "groups"],
   challenges: [],
   "day-sets": ["challenges", "groups"],
@@ -21,6 +22,8 @@ export const API_MODULE_DEPS = {
   "rate-limit": [],
   stats: ["results", "groups", "players"],
   accounts: ["auth"],
+  // Superficie HTTP /v1/panel (menos auth): controladores delgados que llaman a los servicios de cada modulo. Nadie depende de panel.
+  panel: ["accounts", "groups", "players", "membership", "challenges", "day-sets", "results", "rules", "word-filter", "stats"],
   platform: [],
 };
 
@@ -93,6 +96,8 @@ export default tseslint.config(
             { target: "./packages/**", from: "./apps/**", message: "Los paquetes no importan de apps." },
             { target: "./apps/game/**", from: "./apps/api/**", message: "Entre apps no hay imports." },
             { target: "./apps/api/**", from: "./apps/game/**", message: "Entre apps no hay imports." },
+            { target: "./apps/panel/**", from: ["./apps/api/**", "./apps/game/**"], message: "Entre apps no hay imports." },
+            { target: ["./apps/api/**", "./apps/game/**"], from: "./apps/panel/**", message: "Entre apps no hay imports." },
             // doc 02: `auth` es puro, sin base de datos
             { target: "./apps/api/src/auth/**", from: "./apps/api/src/database/**", message: "auth no toca la base de datos (doc 02)." },
             { target: "./apps/api/src/auth/**", from: "./apps/api/src/rate-limit/**", message: "auth no toca la base de datos (doc 02)." },
@@ -110,6 +115,31 @@ export default tseslint.config(
       ...jsxA11y.flatConfigs.recommended.rules,
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+    },
+  },
+  {
+    files: ["apps/panel/**/*.{ts,tsx}", "packages/theme/**/*.{ts,tsx}"],
+    languageOptions: { globals: { ...globals.browser } },
+    plugins: { "jsx-a11y": jsxA11y, "react-hooks": reactHooks },
+    rules: {
+      ...jsxA11y.flatConfigs.recommended.rules,
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
+    },
+  },
+  {
+    // Ningun color, radio ni tamano de letra en px dentro de componentes: todo sale de tokens (doc 08).
+    files: ["apps/panel/src/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...noRawTime,
+        ...noEnumOrHtml,
+        {
+          selector: "Literal[value=/#[0-9a-fA-F]{3,8}\\b|\\b(rgb|hsl)a?\\(|\\[[0-9.]+px\\]/]",
+          message: "Sin colores ni px literales en componentes: usa tokens del tema.",
+        },
+      ],
     },
   },
   {

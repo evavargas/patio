@@ -10,13 +10,17 @@
   "scripts": {
     "dev:api": "pnpm --filter @patio/api dev",
     "dev:game": "pnpm --filter @patio/game dev",
+    "dev:panel": "pnpm --filter @patio/panel dev",
     "db:up": "docker compose up -d --wait mongo",
     "db:down": "docker compose down",
     "typecheck": "pnpm -r typecheck",
     "build": "pnpm -r build",
     "contracts:generate": "pnpm --filter @patio/contracts generate",
+    "themes:check": "pnpm --filter @patio/theme check",
+    "themes:generate": "pnpm --filter @patio/theme generate",
     "test": "pnpm -r test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db:seed": "pnpm --filter @patio/api seed"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
