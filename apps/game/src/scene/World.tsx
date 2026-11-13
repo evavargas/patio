@@ -1,21 +1,9 @@
 import { CuboidCollider, RigidBody } from '@react-three/rapier';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, InstancedMesh, Object3D } from 'three';
+import { useGameStore } from '../game-store';
+import { OBSTACLES, SIZE, TREES } from './layout-data';
 import { PALETTE } from './palette';
-
-const SIZE = 16; // medio lado del patio
-const OBSTACLES: ReadonlyArray<{ pos: [number, number, number]; size: [number, number, number] }> = [
-  { pos: [6, 0.75, -3], size: [2, 1.5, 2] },
-  { pos: [-5, 0.75, 3], size: [2, 1.5, 2] },
-  { pos: [0, 0.5, -11], size: [5, 1, 1] },
-  { pos: [3, 0.15, 8], size: [3, 0.3, 3] }, // escalon sobre el circuito
-];
-export const TOY_POSITIONS: ReadonlyArray<readonly [number, number, number]> = [
-  [4, 0.6, 2],
-  [-3, 0.6, -6],
-  [-10, 0.6, -2],
-  [1, 0.6, 12],
-];
 
 const dummy = new Object3D();
 
@@ -34,24 +22,39 @@ const POSTS: Array<[number, number, number]> = [];
 for (let i = -SIZE; i <= SIZE; i += 2) {
   POSTS.push([i, 0.6, -SIZE], [i, 0.6, SIZE], [-SIZE, 0.6, i], [SIZE, 0.6, i]);
 }
-const TREES: Array<[number, number, number]> = [
-  [-13, 0, -13], [13, 0, -13], [-13, 0, 13], [13, 0, 13], [-13, 0, 0], [13, 0, 0], [0, 0, 14], [10, 0, -9],
-];
-
 export function World() {
   const posts = useRef<InstancedMesh>(null);
   const trunks = useRef<InstancedMesh>(null);
   const crowns = useRef<InstancedMesh>(null);
   const toys = useRef<InstancedMesh>(null);
+  // Cambia solo cuando llega el dia o se logra un desafio (eventos de la interfaz), nunca desde useFrame.
+  const toyPlacements = useGameStore((s) => s.toys);
+  const day = useGameStore((s) => s.day);
+  const completed = useGameStore((s) => s.completed);
+  const toyIsDone = useMemo(() => day?.items.map((i) => completed.includes(i.challengeId)) ?? [], [day, completed]);
 
   useLayoutEffect(() => {
     place(posts.current, POSTS);
     place(trunks.current, TREES.map(([x, , z]) => [x, 1, z] as const));
     place(crowns.current, TREES.map(([x, , z]) => [x, 3.2, z] as const));
-    place(toys.current, TOY_POSITIONS);
-    TOY_POSITIONS.forEach((_, i) => toys.current?.setColorAt(i, new Color(PALETTE.toys[i % PALETTE.toys.length])));
-    if (toys.current?.instanceColor) toys.current.instanceColor.needsUpdate = true;
   }, []);
+
+  useLayoutEffect(() => {
+    const mesh = toys.current;
+    if (!mesh) return;
+    // Un juguete logrado queda apagado: gris y mas chico.
+    toyPlacements.forEach((toy, i) => {
+      const isDone = toyIsDone[i] === true;
+      const [x, y, z] = toy.position;
+      dummy.position.set(x, y, z);
+      dummy.scale.setScalar(isDone ? 0.7 : 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      mesh.setColorAt(i, new Color(isDone ? PALETTE.toyOff : (PALETTE.toys[toy.variant] ?? PALETTE.toys[0])));
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }, [toyPlacements, toyIsDone]);
 
   return (
     <>
@@ -89,10 +92,21 @@ export function World() {
         <icosahedronGeometry args={[1.5, 1]} />
         <meshStandardMaterial color={PALETTE.crown} />
       </instancedMesh>
-      <instancedMesh ref={toys} args={[undefined, undefined, TOY_POSITIONS.length]}>
-        <octahedronGeometry args={[0.6]} />
-        <meshStandardMaterial />
-      </instancedMesh>
+      {toyPlacements.length > 0 && (
+        <instancedMesh
+          key={toyPlacements.length}
+          ref={toys}
+          args={[undefined, undefined, toyPlacements.length]}
+          castShadow
+          onClick={(e) => {
+            e.stopPropagation();
+            if (e.instanceId !== undefined) useGameStore.getState().openToy(e.instanceId);
+          }}
+        >
+          <octahedronGeometry args={[0.6]} />
+          <meshStandardMaterial />
+        </instancedMesh>
+      )}
     </>
   );
 }

@@ -245,12 +245,18 @@ importers:
       '@dnd-kit/core':
         specifier: 6.3.1
         version: 6.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@patio/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@patio/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@react-three/fiber':
         specifier: 9.8.2
-        version: 9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)
+        version: 9.8.2(@types/react@19.3.0)(immer@11.2.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)
       '@react-three/rapier':
         specifier: 2.2.0
-        version: 2.2.0(@react-three/fiber@9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0))(react@19.3.1)(three@0.187.0)
+        version: 2.2.0(@react-three/fiber@9.8.2(@types/react@19.3.0)(immer@11.2.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0))(react@19.3.1)(three@0.187.0)
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -262,7 +268,7 @@ importers:
         version: 0.187.0
       zustand:
         specifier: 5.1.0
-        version: 5.1.0(@types/react@19.3.0)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
+        version: 5.1.0(@types/react@19.3.0)(immer@11.2.10)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
     devDependencies:
       '@types/react':
         specifier: 19.3.0
@@ -282,6 +288,9 @@ importers:
       vite:
         specifier: 8.3.8
         version: 8.3.8(@types/node@24.19.2)(jiti@2.7.0)
+      vitest:
+        specifier: 5.1.0
+        version: 5.1.0(@types/node@24.19.2)(vite@8.3.8(@types/node@24.19.2)(jiti@2.7.0))
 
   apps/panel:
     dependencies:
@@ -4023,7 +4032,7 @@ snapshots:
 
   '@radix-ui/rect@1.1.3': {}
 
-  '@react-three/fiber@9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)':
+  '@react-three/fiber@9.8.2(@types/react@19.3.0)(immer@11.2.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)':
     dependencies:
       '@babel/runtime': 7.29.13
       '@types/webxr': 0.5.24
@@ -4036,17 +4045,17 @@ snapshots:
       suspend-react: 0.1.3(react@19.3.1)
       three: 0.187.0
       use-sync-external-store: 1.7.0(react@19.3.1)
-      zustand: 5.1.0(@types/react@19.3.0)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
+      zustand: 5.1.0(@types/react@19.3.0)(immer@11.2.10)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
     optionalDependencies:
       react-dom: 19.3.1(react@19.3.1)
     transitivePeerDependencies:
       - '@types/react'
       - immer
 
-  '@react-three/rapier@2.2.0(@react-three/fiber@9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0))(react@19.3.1)(three@0.187.0)':
+  '@react-three/rapier@2.2.0(@react-three/fiber@9.8.2(@types/react@19.3.0)(immer@11.2.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0))(react@19.3.1)(three@0.187.0)':
     dependencies:
       '@dimforge/rapier3d-compat': 0.19.2
-      '@react-three/fiber': 9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)
+      '@react-three/fiber': 9.8.2(@types/react@19.3.0)(immer@11.2.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)
       react: 19.3.1
       suspend-react: 0.1.3(react@19.3.1)
       three: 0.187.0
@@ -6460,11 +6469,5 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
       immer: 11.2.10
-      react: 19.3.1
-      use-sync-external-store: 1.7.0(react@19.3.1)
-
-  zustand@5.1.0(@types/react@19.3.0)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1)):
-    optionalDependencies:
-      '@types/react': 19.3.0
       react: 19.3.1
       use-sync-external-store: 1.7.0(react@19.3.1)

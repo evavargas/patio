@@ -1,6 +1,8 @@
-# @patio/game (prueba de rendimiento 3D)
+# @patio/game
 
-Estado: solo la prueba de rendimiento (skill `perf-gate-3d`). Capacitor todavía no está agregado: falta el Android SDK en la máquina de desarrollo.
+Estado: juego mínimo conectado a la API (registro, recuperar, patio con un juguete por desafío, tres mecánicas, cola de logros) y prueba de rendimiento 3D (skill `perf-gate-3d`, abajo). Para jugar: `pnpm db:up`, `pnpm db:seed`, `pnpm dev:api` y `pnpm dev:game`; con el seed, el código de grupo `TERCER` tiene set hoy. Pruebas: `pnpm --filter @patio/game test`.
+
+Prueba de rendimiento: Capacitor todavía no está agregado: falta el Android SDK en la máquina de desarrollo.
 
 Criterio propuesto (a fijar): 30 fps sostenidos y peor 1 % no menor a 20 en el dispositivo más modesto (Xiaomi Redmi Note 9 Pro, Snapdragon 720G, Adreno 618, 6 GB, Android 10; fuente smart-gsm.com).
 

@@ -18,7 +18,8 @@ function FrameProbe() {
 }
 
 export function Scene() {
-  const isPaused = useGameStore((s) => s.screen === 'challenge');
+  // El bucle solo corre con el patio a la vista; con un desafio o una pantalla encima se pausa.
+  const isPaused = useGameStore((s) => s.screen !== 'yard');
   return (
     <Canvas
       role="img"

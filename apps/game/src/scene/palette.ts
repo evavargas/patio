@@ -12,5 +12,6 @@ export const PALETTE = {
   player: '#7bd88f',
   playerHead: '#a5efb5',
   mover: '#f06292',
+  toyOff: '#9e9e9e',
   toys: ['#ffca28', '#4fc3f7', '#ba68c8', '#ef5350'],
 } as const;
