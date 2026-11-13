@@ -1,0 +1,93 @@
+{
+  "id": "default",
+  "name": "Patio Uruguayo Sunset",
+  "modes": {
+    "light": {
+      "color": {
+        "background": "#fff9ee",
+        "surface": "#fbf3e1",
+        "surface-raised": "#ffffff",
+        "text": "#1f1b11",
+        "text-muted": "#434750",
+        "border": "#747782",
+        "primary": "#35599d",
+        "primary-contrast": "#ffffff",
+        "primary-soft": "#d8e2ff",
+        "accent": "#a0402f",
+        "accent-soft": "#ffdcd5",
+        "success": "#2c6b31",
+        "success-soft": "#acf0a7",
+        "warning": "#894a0f",
+        "warning-soft": "#ffdcc4",
+        "danger": "#ba1a1a",
+        "danger-soft": "#ffdad6",
+        "info": "#00647a",
+        "info-soft": "#c4eaf5",
+        "focus-ring": "#1c4588",
+        "data-1": "#35599d",
+        "data-2": "#2c6b31",
+        "data-3": "#a0402f",
+        "data-4": "#7a5a00",
+        "data-5": "#6b4a9e",
+        "data-6": "#00647a",
+        "seq-1": "#d8e2ff",
+        "seq-2": "#aec6ff",
+        "seq-3": "#6f93d6",
+        "seq-4": "#35599d",
+        "seq-5": "#1c3563"
+      },
+      "shadow": {
+        "raised": "0 4px 12px -2px rgb(84 77 69 / 0.12)",
+        "floating": "0 8px 18px 0 rgb(79 114 184 / 0.2)"
+      }
+    },
+    "dark": {
+      "color": {
+        "background": "#17130b",
+        "surface": "#1f1b11",
+        "surface-raised": "#2a2619",
+        "text": "#f4eddc",
+        "text-muted": "#cbc8bd",
+        "border": "#8f929e",
+        "primary": "#aec6ff",
+        "primary-contrast": "#001a42",
+        "primary-soft": "#1c3563",
+        "accent": "#ffb3a6",
+        "accent-soft": "#5a2a22",
+        "success": "#93d790",
+        "success-soft": "#1d4a22",
+        "warning": "#ffb780",
+        "warning-soft": "#5a3410",
+        "danger": "#ffb4ab",
+        "danger-soft": "#5c1f1a",
+        "info": "#7fd4ee",
+        "info-soft": "#0f4254",
+        "focus-ring": "#ffe08a",
+        "data-1": "#aec6ff",
+        "data-2": "#93d790",
+        "data-3": "#ffb3a6",
+        "data-4": "#e8c86a",
+        "data-5": "#d0b8f0",
+        "data-6": "#7fd4ee",
+        "seq-1": "#1c3563",
+        "seq-2": "#2f4f8a",
+        "seq-3": "#4f72b8",
+        "seq-4": "#8aa8e6",
+        "seq-5": "#d8e2ff"
+      },
+      "shadow": {
+        "raised": "0 4px 12px -2px rgb(0 0 0 / 0.5)",
+        "floating": "0 8px 18px 0 rgb(0 0 0 / 0.6)"
+      }
+    }
+  },
+  "shared": {
+    "font": { "sans": "\"Lexend\", system-ui, sans-serif" },
+    "text": { "xs": "0.75rem", "sm": "0.875rem", "base": "1rem", "lg": "1.125rem", "xl": "1.25rem", "2xl": "1.5rem", "3xl": "2rem" },
+    "weight": { "normal": "400", "medium": "500", "semibold": "600", "bold": "700" },
+    "leading": { "tight": "1.25", "normal": "1.5", "relaxed": "1.7" },
+    "radius": { "sm": "0.5rem", "md": "0.75rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+    "size": { "touch": "2.75rem" },
+    "motion": { "duration-fast": "100ms", "duration-base": "200ms", "ease": "cubic-bezier(0.2, 0, 0, 1)" }
+  }
+}

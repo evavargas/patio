@@ -1,0 +1,32 @@
+{
+  "name": "@patio/theme",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/generated/tokens.css",
+    "./tailwind.css": "./src/generated/tailwind.css",
+    "./fonts.css": "./src/fonts.css"
+  },
+  "scripts": {
+    "generate": "node scripts/themes.ts generate",
+    "check": "node scripts/themes.ts check",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@fontsource/lexend": "5.3.0"
+  },
+  "peerDependencies": {
+    "react": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "react": "19.3.1",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}
